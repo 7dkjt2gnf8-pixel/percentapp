@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Percent+">
+<title>Percent+</title>
+<style>
+  :root{
+    --carbon-1:#1b1b1b;
+    --carbon-2:#262626;
+    --key:#333333;
+    --key-lo:#2a2a2a;
+    --key-text:#eceae0;
+    --cream:#e9e5d0;
+    --cream-2:#ddd8bf;
+    --cream-line:#c9c4a9;
+    --green:#2f7a52;
+    --green-lo:#215f3f;
+    --red:#b3392a;
+    --red-lo:#8f2c20;
+    --up:#2f9e5b;
+    --down:#c0392b;
+    --radius:13px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:#000;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; color:var(--key-text);
+  }
+  .phone{
+    width:100%; max-width:430px; height:100vh; height:100dvh;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0/6px 6px,
+      linear-gradient(180deg,var(--carbon-2),var(--carbon-1));
+    display:flex; flex-direction:column; overflow:hidden;
+    position:relative;
+  }
+
+  /* ---------- unified display ---------- */
+  .display{
+    background:linear-gradient(180deg,var(--cream),var(--cream-2));
+    color:#1a1a1a;
+    padding:12px 16px 12px;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .historyLog{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    font-size:17px; color:#6e6b5d; text-align:left; line-height:1.55;
+  }
+  .historyLog .histLine{ white-space:normal; word-wrap:break-word; }
+  .memline{ height:15px; font-size:12px; color:#7a7666; font-weight:600; letter-spacing:.5px; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0; }
+  .gearBtn{
+    background:none; border:none; padding:2px 4px; color:#9a9682; font-size:14px;
+    opacity:.55; line-height:1;
+  }
+  .gearBtn:active{ opacity:.9; }
+  .mainRow{ display:block; flex-shrink:0; }
+  .mainRow .main{
+    font-size:32px; font-weight:400; line-height:1.2;
+    text-align:left; word-wrap:break-word; white-space:normal;
+    margin-top:3px; min-height:1.2em;
+  }
+  .divider{ height:1px; background:var(--cream-line); margin:8px 0 8px; flex-shrink:0; }
+
+  .pctRows{ display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:start; }
+  .pctLeft{ border-right:1px solid var(--cream-line); padding-right:12px; }
+  .pctRow{ display:flex; justify-content:space-between; align-items:baseline; padding:1px 0; cursor:pointer; }
+  .pctRow .lbl{ font-size:15px; color:#3a3833; }
+  .pctRow .val{ font-size:21px; font-weight:400; font-variant-numeric:tabular-nums; }
+  .pctRow.active .val{ color:#0a5a2f; border-bottom:2px solid #0a5a2f; }
+  .pctRight{ display:flex; flex-direction:column; justify-content:center; align-items:flex-end; min-width:100px; padding-top:1px; }
+  .pctRight .tag{ font-size:12px; font-weight:700; letter-spacing:.3px; }
+  .pctRight .pctval{ font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.05; }
+  .pctRight .formula{ font-size:9px; color:#7a7666; margin-top:1px; }
+  .up{ color:var(--up); } .down{ color:var(--down); }
+
+  .gauge{ margin-top:8px; height:5px; border-radius:4px; background:#b9b49a; position:relative; overflow:hidden; }
+  .gauge .fill{ position:absolute; top:0; bottom:0; width:0%; border-radius:4px; transition:width .25s ease, left .25s ease, background .2s ease; }
+
+  .hint{ text-align:right; font-size:11px; color:#8a8672; height:14px; margin-top:6px; }
+  #pctSection{ flex-shrink:0; }
+
+  /* ---------- keypad ---------- */
+  .keypad{
+    flex:0 0 auto;
+    height:58vh;
+    display:grid; gap:7px; padding:9px;
+    grid-template-columns:repeat(5,1fr);
+    grid-auto-rows:1fr;
+  }
+  .key{
+    border:none; border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--key),var(--key-lo));
+    color:var(--key-text); font-size:22px; font-weight:400;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 0 rgba(255,255,255,0.05) inset, 0 2px 3px rgba(0,0,0,0.5);
+    transition:transform .05s, background .15s, color .15s;
+    padding:0;
+  }
+  .key:active{ transform:scale(0.93); filter:brightness(1.15); }
+  .key.op{ background:linear-gradient(180deg,#3d3d3d,#303030); font-size:22px; }
+  .key.arith{ background:linear-gradient(180deg,#3a6ea8,#2b5480); font-size:24px; font-weight:500; }
+  .key.equalsBtn{ background:linear-gradient(180deg,#e0872e,#b76a20); font-size:24px; font-weight:600; color:#fff; }
+  .key.red{ background:linear-gradient(180deg,var(--red),var(--red-lo)); font-size:20px; font-weight:600; }
+  .key.green{ background:linear-gradient(180deg,var(--green),var(--green-lo)); font-size:17px; font-weight:600; }
+  .key.amber{ background:linear-gradient(180deg,#8a6d1f,#6e5717); font-size:15px; font-weight:600; flex-direction:column; gap:1px; }
+  .key.small{ font-size:14px; font-weight:600; }
+  .key .sub{ font-size:11px; display:block; opacity:.85; margin-top:0; font-weight:600; }
+
+  /* ---------- settings modal ---------- */
+  .modalOverlay{
+    position:absolute; inset:0; background:rgba(0,0,0,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:10; opacity:0; pointer-events:none; transition:opacity .15s;
+  }
+  .modalOverlay.open{ opacity:1; pointer-events:auto; }
+  .modalBox{
+    background:linear-gradient(180deg,#2c2c2c,#232323);
+    border-radius:16px; padding:20px; width:82%;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  }
+  .modalBox h3{ margin:0 0 14px; font-size:16px; font-weight:600; color:var(--key-text); }
+  .modalBox label{ font-size:12px; color:#9a9890; display:block; margin-bottom:6px; }
+  .modalBox input{
+    width:100%; font-size:22px; padding:10px 12px; border-radius:10px;
+    border:none; background:var(--cream); color:#1a1a1a; text-align:right;
+    box-sizing:border-box;
+  }
+  .modalBtns{ display:flex; gap:10px; margin-top:16px; }
+  .modalBtns button{
+    flex:1; padding:11px; border:none; border-radius:10px; font-size:15px; font-weight:600;
+  }
+  .btnCancel{ background:#3d3d3d; color:var(--key-text); }
+  .btnSave{ background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ===== SETTINGS MODAL ===== -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modalBox">
+      <h3>Paramètres</h3>
+      <label for="vatInput">Taux de TVA (%)</label>
+      <input type="number" inputmode="decimal" id="vatInput" value="20">
+      <div class="modalBtns">
+        <button class="btnCancel" id="btnCancel">Annuler</button>
+        <button class="btnSave" id="btnSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UNIFIED DISPLAY ===== -->
+  <div class="display">
+    <div class="memline">
+      <button class="gearBtn" id="gearBtn" aria-label="Paramètres">⚙︎</button>
+    </div>
+    <div class="historyLog" id="historyLog"></div>
+    <div class="mainRow">
+      <div class="main" id="mainVal">0</div>
+    </div>
+
+    <div class="divider" id="pctDivider" style="display:none;"></div>
+
+    <div id="pctSection" style="display:none;">
+    <div class="pctRows">
+      <div class="pctLeft">
+        <div class="pctRow" id="rowDe"><span class="lbl">de :</span><span class="val" id="valDe">—</span></div>
+        <div class="pctRow" id="rowTo"><span class="lbl">à :</span><span class="val" id="valTo">—</span></div>
+        <div class="pctRow"><span class="lbl">Δ =</span><span class="val" id="valDelta">0</span></div>
+      </div>
+      <div class="pctRight">
+        <div class="tag" id="pctTag">&nbsp;</div>
+        <div class="pctval" id="pctVal">—</div>
+        <div class="formula">(Δ / de)</div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- ===== SINGLE KEYPAD ===== -->
+  <div class="keypad">
+    <button class="key" data-a="digit" data-v="7">7</button>
+    <button class="key" data-a="digit" data-v="8">8</button>
+    <button class="key" data-a="digit" data-v="9">9</button>
+    <button class="key green" data-a="de">de</button>
+    <button class="key red" data-a="clear">C</button>
+
+    <button class="key" data-a="digit" data-v="4">4</button>
+    <button class="key" data-a="digit" data-v="5">5</button>
+    <button class="key" data-a="digit" data-v="6">6</button>
+    <button class="key green" data-a="to">à</button>
+    <button class="key arith" data-a="op" data-v="÷">÷</button>
+
+    <button class="key" data-a="digit" data-v="1">1</button>
+    <button class="key" data-a="digit" data-v="2">2</button>
+    <button class="key" data-a="digit" data-v="3">3</button>
+    <button class="key op" data-a="paren-open">(</button>
+    <button class="key arith" data-a="op" data-v="×">×</button>
+
+    <button class="key" data-a="digit" data-v="0">0</button>
+    <button class="key" data-a="dot">,</button>
+    <button class="key op" data-a="sign">±</button>
+    <button class="key op" data-a="paren-close">)</button>
+    <button class="key arith" data-a="op" data-v="−">−</button>
+
+    <button class="key op small" data-a="back">⌫</button>
+    <button class="key amber" data-a="tvaplus" id="keyTvaPlus">TVA+<span class="sub" id="vatSubPlus">20%</span></button>
+    <button class="key amber" data-a="tvaminus" id="keyTvaMinus">TVA-<span class="sub" id="vatSubMinus">20%</span></button>
+    <button class="key op" data-a="percent" id="keyPercent">%</button>
+    <button class="key arith" data-a="op" data-v="+">+</button>
+
+    <button class="key equalsBtn" data-a="equals" id="keyEquals" data-span="2" style="font-size:22px;">=</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const mainVal = document.getElementById('mainVal');
+  const historyLog = document.getElementById('historyLog');
+
+  const valDe = document.getElementById('valDe');
+  const valTo = document.getElementById('valTo');
+  const valDelta = document.getElementById('valDelta');
+  const pctTag = document.getElementById('pctTag');
+  const pctVal = document.getElementById('pctVal');
+  const rowDe = document.getElementById('rowDe');
+  const rowTo = document.getElementById('rowTo');
+  const pctSection = document.getElementById('pctSection');
+  const pctDivider = document.getElementById('pctDivider');
+
+  const gearBtn = document.getElementById('gearBtn');
+  const vatSubPlus = document.getElementById('vatSubPlus');
+  const vatSubMinus = document.getElementById('vatSubMinus');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const vatInput = document.getElementById('vatInput');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnSave = document.getElementById('btnSave');
+  const keyEquals = document.getElementById('keyEquals');
+
+  // ---- shared entry buffer ----
+  let cur = "0";
+  let justEntered = false;
+  let justEvaluated = false;
+
+  // ---- expression tokens: numbers, operators, and parentheses as display strings ----
+  const OPS = ['+','−','×','÷'];
+  function isOperator(t){ return OPS.includes(t); }
+  function isNumberToken(t){ return /^-?[0-9]+(,[0-9]+)?$/.test(t); }
+  let tokens = [];
+
+  // ---- history of completed calculations (scrollable) ----
+  let history = [];
+  function pushHistory(line){
+    history.push(line);
+    if(history.length > 200) history.shift();
+    renderHistory();
+  }
+  function renderHistory(){
+    historyLog.innerHTML = history.map(h =>
+      '<div class="histLine">' + h.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>'
+    ).join('');
+    historyLog.scrollTop = historyLog.scrollHeight;
+  }
+
+  // ---- percent-variation state ----
+  let pDe = null, pTo = null;
+
+  // ---- VAT rate (editable via settings) ----
+  let vatRate = 20;
+
+  function layoutEquals(){
+    const keys = Array.from(document.querySelectorAll('.keypad .key'));
+    const others = keys.filter(k => k !== keyEquals && getComputedStyle(k).display !== 'none');
+    const n = others.length;
+    const r = n % 5;
+    const span = r === 0 ? 5 : (5 - r);
+    keyEquals.style.gridColumn = `span ${span}`;
+  }
+
+  let precision = 2;
+
+  function fmt(n){
+    if(!isFinite(n)) return "Erreur";
+    if(precision !== null) return n.toFixed(precision);
+    let s = n.toFixed(8).replace(/0+$/,'').replace(/\.$/,'');
+    if(s === "" || s === "-") s = "0";
+    return s;
+  }
+  function fmtDisp(n){ return fmt(n).replace('.', ','); }
+
+  function render(){
+    const curDisp = cur.replace('.', ',');
+    const showCur = (tokens.length === 0) || (cur !== "0");
+    const liveExpr = showCur ? tokens.concat([curDisp]).join(' ') : tokens.join(' ');
+    mainVal.textContent = liveExpr.length > 40 ? liveExpr.slice(-40) : liveExpr;
+
+    const showPct = pDe !== null;
+    pctSection.style.display = showPct ? 'block' : 'none';
+    pctDivider.style.display = showPct ? 'block' : 'none';
+
+    valDe.textContent = pDe === null ? "—" : fmtDisp(pDe);
+    valTo.textContent = pTo === null ? "—" : fmtDisp(pTo);
+    rowDe.classList.toggle('active', pDe !== null && pTo === null);
+    rowTo.classList.toggle('active', pDe !== null && pTo !== null);
+
+    if(pDe !== null && pTo !== null){
+      const delta = pTo - pDe;
+      const pct = pDe !== 0 ? (delta/pDe)*100 : NaN;
+      valDelta.textContent = fmtDisp(delta);
+      if(isFinite(pct)){
+        const isUp = pct >= 0;
+        pctTag.textContent = isUp ? "hausse" : "baisse";
+        pctTag.className = 'tag ' + (isUp ? 'up' : 'down');
+        pctVal.textContent = (isUp?'+':'') + pct.toFixed(2).replace('.',',') + '%';
+        pctVal.className = 'pctval ' + (isUp ? 'up' : 'down');
+      } else {
+        pctTag.textContent = ''; pctVal.textContent = '—';
+      }
+    } else {
+      valDelta.textContent = "0";
+      pctTag.textContent = '\u00A0'; pctVal.textContent = '—';
+    }
+
+    vatSubPlus.textContent = fmt(vatRate) + '%';
+    vatSubMinus.textContent = fmt(vatRate) + '%';
+  }
+
+  function inputDigit(d){
+    if(justEntered || justEvaluated){ cur = "0"; justEntered = false; justEvaluated = false; }
+    cur = (cur === "0") ? d : cur + d;
+    render();
+  }
+  function inputDot(){
+    if(justEntered || justEvaluated){ cur = "0"; justEntered = false; justEvaluated = false; }
+    if(!cur.includes('.')) cur += '.';
+    render();
+  }
+  function toggleSign(){
+    cur = cur.startsWith('-') ? cur.slice(1) : (cur !== "0" ? '-' + cur : cur);
+    render();
+  }
+  function backspace(){
+    if(cur !== "0" && cur.length > 0){
+      cur = cur.length > 1 ? cur.slice(0,-1) : "0";
+    } else if(tokens.length > 0){
+      const popped = tokens.pop();
+      if(isNumberToken(popped)){
+        cur = popped.replace(',', '.');
+      } else {
+        cur = "0";
+      }
+    }
+    justEntered = false; justEvaluated = false;
+    render();
+  }
+  function compute(a,b,op){
+    switch(op){ case '+': return a+b; case '−': return a-b; case '×': return a*b; case '÷': return b===0?NaN:a/b; }
+  }
+  function setOp(op){
+    if(justEvaluated){
+      tokens = [cur.replace('.', ',')];
+      justEvaluated = false;
+    } else {
+      tokens.push(cur.replace('.', ','));
+    }
+    tokens.push(op);
+    cur = "0"; justEntered = false;
+    render();
+  }
+  function openParen(){
+    const last = tokens[tokens.length-1];
+    if(cur !== "0" || justEvaluated){
+      tokens.push(cur.replace('.', ','));
+      tokens.push('×');
+    } else if(last === ')' || isNumberToken(last)){
+      tokens.push('×');
+    }
+    tokens.push('(');
+    cur = "0"; justEntered = false; justEvaluated = false;
+    render();
+  }
+  function closeParen(){
+    const openCount = tokens.filter(t => t === '(').length;
+    const closeCount = tokens.filter(t => t === ')').length;
+    if(openCount <= closeCount) return;
+    if(cur !== "0"){ tokens.push(cur.replace('.', ',')); cur = "0"; }
+    tokens.push(')');
+    render();
+  }
+  function buildEvalTokens(){
+    let evalTokens = tokens.slice();
+    const last = evalTokens[evalTokens.length-1];
+    if(cur !== "0" || evalTokens.length === 0 || isOperator(last) || last === '('){
+      evalTokens.push(cur.replace('.', ','));
+    }
+    const openCount = evalTokens.filter(t => t === '(').length;
+    const closeCount = evalTokens.filter(t => t === ')').length;
+    for(let i=0; i<openCount-closeCount; i++) evalTokens.push(')');
+    return evalTokens;
+  }
+  function evaluateTokens(evalTokens){
+    const exprStr = evalTokens.join('');
+    const jsExpr = exprStr
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/−/g, '-')
+      .replace(/,/g, '.');
+    try {
+      const result = Function('"use strict"; return (' + jsExpr + ')')();
+      return (typeof result === 'number' && isFinite(result)) ? result : NaN;
+    } catch(e){ return NaN; }
+  }
+  function equals(){
+    if(tokens.length === 0){
+      if(pDe !== null && pTo !== null) logPctResult();
+      return;
+    }
+    const evalTokens = buildEvalTokens();
+    const result = evaluateTokens(evalTokens);
+    if(isNaN(result)){
+      mainVal.textContent = "Erreur";
+      tokens = []; cur = "0"; justEvaluated = false;
+      return;
+    }
+    pushHistory(evalTokens.join(' ') + ' = ' + fmtDisp(result));
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    render();
+  }
+  function clearAll(){
+    cur = "0"; tokens = []; justEntered = false; justEvaluated = false;
+    pDe = null; pTo = null;
+    render();
+  }
+
+  function setDe(){
+    pDe = parseFloat(cur); pTo = null;
+    cur = "0"; justEntered = true; justEvaluated = false; tokens = [];
+    render();
+  }
+  function setTo(){
+    if(pDe === null){ setDe(); return; }
+    pTo = parseFloat(cur);
+    cur = fmt(pTo); justEntered = true; justEvaluated = false;
+    render();
+  }
+  function logPctResult(){
+    if(pDe === null || pTo === null) return;
+    const delta = pTo - pDe;
+    const pct = pDe !== 0 ? (delta/pDe)*100 : NaN;
+    if(!isFinite(pct)) return;
+    const isUp = pct >= 0;
+    const tag = isUp ? 'hausse' : 'baisse';
+    pushHistory(`${fmtDisp(pDe)} → ${fmtDisp(pTo)} (Δ=${fmtDisp(delta)} / ${(isUp?'+':'')}${pct.toFixed(2).replace('.',',')}% ${tag})`);
+  }
+
+  // ---- TVA+ / TVA- : applied to the value currently on the main display, with detail shown ----
+  function tvaPlus(){
+    const base = parseFloat(cur) || 0;
+    const taxAmount = base * vatRate / 100;
+    const result = base + taxAmount;
+    pushHistory(`${fmtDisp(base)} + ${fmtDisp(taxAmount)} (${fmt(vatRate)}%TVA) = ${fmtDisp(result)} (TTC)`);
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    render();
+  }
+  function tvaMinus(){
+    const base = parseFloat(cur) || 0;
+    const result = base / (1 + vatRate/100);
+    const taxAmount = base - result;
+    pushHistory(`${fmtDisp(base)} - ${fmtDisp(taxAmount)} (${fmt(vatRate)}%TVA) = ${fmtDisp(result)} (HT)`);
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    render();
+  }
+
+  // ---- % : classic calculator percent (e.g. 5 + 12 % → 5.6) ----
+  function percentKey(){
+    const p = parseFloat(cur.replace(',', '.')) || 0;
+    const lastTok = tokens[tokens.length-1];
+    if(tokens.length > 0 && isOperator(lastTok) && isNumberToken(tokens[tokens.length-2])){
+      const op = lastTok;
+      const baseNum = parseFloat(tokens[tokens.length-2].replace(',', '.'));
+      if(op === '+' || op === '−'){
+        const contribution = baseNum * p / 100;
+        const result = compute(baseNum, contribution, op);
+        pushHistory(`${tokens.join(' ')} ${fmtDisp(p)}% = ${fmtDisp(result)}`);
+        tokens = [];
+        cur = fmt(result);
+        justEvaluated = true; justEntered = false;
+      } else {
+        cur = fmt(p/100);
+        justEntered = false; justEvaluated = false;
+      }
+    } else {
+      cur = fmt(p/100);
+      justEntered = true;
+    }
+    render();
+  }
+
+  document.querySelector('.keypad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.key');
+    if(!btn) return;
+    const a = btn.dataset.a, v = btn.dataset.v;
+    if(a === 'digit') inputDigit(v);
+    else if(a === 'dot') inputDot();
+    else if(a === 'sign') toggleSign();
+    else if(a === 'op') setOp(v);
+    else if(a === 'equals') equals();
+    else if(a === 'clear') clearAll();
+    else if(a === 'de') setDe();
+    else if(a === 'to') setTo();
+    else if(a === 'tvaplus') tvaPlus();
+    else if(a === 'tvaminus') tvaMinus();
+    else if(a === 'percent') percentKey();
+    else if(a === 'back') backspace();
+    else if(a === 'paren-open') openParen();
+    else if(a === 'paren-close') closeParen();
+  });
+
+  rowDe.addEventListener('click', ()=>{ cur = pDe===null? "0" : fmt(pDe); justEntered = false; render(); });
+  rowTo.addEventListener('click', ()=>{ if(pDe!==null){ pTo=null; cur = "0"; justEntered=false; render(); } });
+
+  // ---- settings modal ----
+  function openModal(){
+    vatInput.value = vatRate;
+    modalOverlay.classList.add('open');
+    setTimeout(()=>vatInput.focus(), 50);
+  }
+  function closeModal(){ modalOverlay.classList.remove('open'); }
+  gearBtn.addEventListener('click', openModal);
+  btnCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
+  btnSave.addEventListener('click', ()=>{
+    const val = parseFloat(vatInput.value);
+    if(!isNaN(val) && val >= 0){ vatRate = val; }
+    render();
+    closeModal();
+  });
+
+  layoutEquals();
+  render();
+})();
+</script>
+</body>
+</html>
