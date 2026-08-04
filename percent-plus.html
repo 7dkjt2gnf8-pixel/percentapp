@@ -40,13 +40,14 @@
       linear-gradient(180deg,var(--carbon-2),var(--carbon-1));
     display:flex; flex-direction:column; overflow:hidden;
     position:relative;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
   }
 
   /* ---------- unified display ---------- */
   .display{
     background:linear-gradient(180deg,var(--cream),var(--cream-2));
     color:#1a1a1a;
-    padding:12px 16px 12px;
+    padding:calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
     flex:1 1 auto;
     min-height:0;
     overflow:hidden;
@@ -560,6 +561,12 @@
   layoutEquals();
   render();
 })();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
