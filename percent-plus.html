@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Percent+">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Percent+</title>
+<style>
+  :root{
+    --carbon-1:#1b1b1b;
+    --carbon-2:#262626;
+    --key:#333333;
+    --key-lo:#2a2a2a;
+    --key-text:#eceae0;
+    --cream:#ffffff;
+    --cream-2:#f4f4f4;
+    --cream-line:#dcdcdc;
+    --disp-text:#1a1a1a;
+    --disp-text-dim:#6e6b5d;
+    --disp-label:#3a3833;
+    --disp-formula:#7a7666;
+    --disp-mem:#7a7666;
+    --disp-active:#0a5a2f;
+    --disp-gauge:#b9b49a;
+    --green:#2f7a52;
+    --green-lo:#215f3f;
+    --red:#b3392a;
+    --red-lo:#8f2c20;
+    --up:#2f9e5b;
+    --down:#c0392b;
+    --radius:13px;
+  }
+  .phone.dark{
+    --cream:#1c1c1c;
+    --cream-2:#141414;
+    --cream-line:#333333;
+    --disp-text:#f0f0ec;
+    --disp-text-dim:#9a988c;
+    --disp-label:#d8d6cc;
+    --disp-formula:#8a8880;
+    --disp-mem:#8a8880;
+    --disp-active:#4fd67f;
+    --disp-gauge:#3a3a3a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  html,body{height:100%; overflow-x:hidden; overscroll-behavior:none;}
+
+  body{
+    margin:0; background:#000;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; color:var(--key-text);
+  }
+  .phone{
+    width:100%; max-width:430px; height:100vh; height:100dvh;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0/6px 6px,
+      linear-gradient(180deg,var(--carbon-2),var(--carbon-1));
+    display:flex; flex-direction:column; overflow:hidden;
+    position:relative;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ---------- unified display ---------- */
+  .display{
+    background:linear-gradient(180deg,var(--cream),var(--cream-2));
+    color:var(--disp-text);
+    padding:calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    transition:background .2s ease, color .2s ease;
+    border:1px solid var(--cream-line);
+    box-sizing:border-box;
+  }
+  .historyLog{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
+    font-size:17px; color:var(--disp-text-dim); text-align:left; line-height:1.55;
+  }
+  .historyLog .histLine{
+    white-space:normal; word-wrap:break-word;
+    padding:3px 4px; margin:0 -4px; border-radius:7px;
+    cursor:pointer;
+    transition:background .25s ease;
+  }
+  .historyLog .histLine.copied{ background:rgba(47,122,82,0.28); }
+  @keyframes histIn{ from{ opacity:0; transform:translateY(7px); } to{ opacity:1; transform:translateY(0); } }
+  .historyLog .histLine.histLineNew{ animation:histIn .28s ease; }
+  .memline{ height:15px; font-size:12px; color:var(--disp-mem); font-weight:600; letter-spacing:.5px; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0; }
+  .gearBtn{
+    background:none; border:none; padding:2px 4px; color:#9a9682; font-size:20px;
+    opacity:.6; line-height:1;
+  }
+  .gearBtn:active{ opacity:.9; }
+  .mainRow{ display:block; flex-shrink:0; }
+  .mainRow .main{
+    font-size:32px; font-weight:400; line-height:1.2;
+    text-align:left; word-wrap:break-word; white-space:normal;
+    margin-top:6px; min-height:1.2em;
+    border:1px solid var(--cream-line); border-radius:10px;
+    padding:8px 10px;
+  }
+  @keyframes resultPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
+  .mainRow .main.pulse{ animation:resultPulse .4s ease; transform-origin:left center; }
+  .divider{ height:1px; background:var(--cream-line); margin:8px 0 8px; flex-shrink:0; }
+
+  .pctRows{ display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:start; }
+  .pctLeft{ border-right:1px solid var(--cream-line); padding-right:12px; }
+  .pctRow{ display:flex; justify-content:space-between; align-items:baseline; padding:1px 0; cursor:pointer; }
+  .pctRow .lbl{ font-size:15px; color:var(--disp-label); }
+  .pctRow .val{ font-size:21px; font-weight:400; font-variant-numeric:tabular-nums; }
+  .pctRow .val.editableVal{
+    display:inline-block;
+    min-width:64px;
+    text-align:right;
+    padding:2px 10px;
+    border-radius:9px;
+    border:1.5px solid var(--cream-line);
+    transition:border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  .pctRow.active .val.editableVal{
+    color:var(--disp-active);
+    border:2px solid var(--disp-active);
+    background:rgba(10,90,47,0.08);
+    padding:1.5px 9.5px;
+  }
+  .phone.dark .pctRow.active .val.editableVal{
+    background:rgba(79,214,127,0.12);
+  }
+  .pctRight{ display:flex; flex-direction:column; justify-content:center; align-items:flex-end; min-width:100px; padding-top:1px; }
+  .pctRight .tag{ font-size:12px; font-weight:700; letter-spacing:.3px; }
+  .pctRight .pctval{ font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.05; }
+  .pctRight .formula{ font-size:9px; color:var(--disp-formula); margin-top:1px; }
+  .up{ color:var(--up); } .down{ color:var(--down); }
+
+  .gauge{ margin-top:8px; height:5px; border-radius:4px; background:#b9b49a; position:relative; overflow:hidden; }
+  .gauge .fill{ position:absolute; top:0; bottom:0; width:0%; border-radius:4px; transition:width .25s ease, left .25s ease, background .2s ease; }
+
+  .hint{ text-align:right; font-size:11px; color:#8a8672; height:14px; margin-top:6px; }
+  #pctSection{ flex-shrink:0; }
+
+  /* ---------- keypad ---------- */
+  .keypad{
+    flex:0 0 auto;
+    height:38vh;
+    display:grid; gap:7px; padding:9px;
+    grid-template-columns:repeat(5,1fr);
+    grid-auto-rows:1fr;
+  }
+  .key{
+    border:none; border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--key),var(--key-lo));
+    color:var(--key-text); font-size:22px; font-weight:400;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 0 rgba(255,255,255,0.05) inset, 0 2px 3px rgba(0,0,0,0.5);
+    transition:transform .05s, background .15s, color .15s;
+    padding:0;
+    touch-action:manipulation;
+  }
+  .key:active{ transform:scale(0.93); filter:brightness(1.15); }
+  .key.op{ background:linear-gradient(180deg,#3d3d3d,#303030); font-size:22px; }
+  .key.arith{ background:linear-gradient(180deg,#3a6ea8,#2b5480); font-size:24px; font-weight:500; }
+  .key.equalsBtn{ background:linear-gradient(180deg,#e0872e,#b76a20); font-size:24px; font-weight:600; color:#fff; }
+  .key.disabledKey{ opacity:.28; filter:grayscale(.5); pointer-events:none; }
+  .key.red{ background:linear-gradient(180deg,var(--red),var(--red-lo)); font-size:20px; font-weight:600; }
+  .key.green{ background:linear-gradient(180deg,var(--green),var(--green-lo)); font-size:17px; font-weight:600; }
+  .key.amber{ background:linear-gradient(180deg,#7cc6ec,#4fa5d6); font-size:15px; font-weight:600; flex-direction:column; gap:1px; }
+  .key.small{ font-size:14px; font-weight:600; }
+  .key .sub{ font-size:11px; display:block; opacity:.85; margin-top:0; font-weight:600; }
+  .key.comboKey{
+    background:none; box-shadow:none; padding:0;
+    flex-direction:row; gap:6px;
+  }
+  .halfBtn{
+    flex:1; height:100%; border:none; border-radius:11px;
+    background:linear-gradient(180deg,#3d3d3d,#303030);
+    color:var(--key-text); font-size:19px; font-weight:400;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 0 rgba(255,255,255,0.05) inset, 0 2px 3px rgba(0,0,0,0.5);
+    padding:0;
+    touch-action:manipulation;
+  }
+  .halfBtn:active{ transform:scale(0.93); filter:brightness(1.15); }
+
+  /* ---------- settings modal ---------- */
+  .modalOverlay{
+    position:absolute; inset:0; background:rgba(0,0,0,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:10; opacity:0; pointer-events:none; transition:opacity .15s;
+  }
+  .modalOverlay.open{ opacity:1; pointer-events:auto; }
+  .modalBox{
+    background:linear-gradient(180deg,#2c2c2c,#232323);
+    border-radius:16px; padding:20px; width:82%;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  }
+  .modalBox h3{ margin:0 0 14px; font-size:16px; font-weight:600; color:var(--key-text); }
+  .modalBox label{ font-size:12px; color:#9a9890; display:block; margin-bottom:6px; }
+  .modalBox input{
+    width:100%; font-size:22px; padding:10px 12px; border-radius:10px;
+    border:none; background:var(--cream); color:var(--disp-text); text-align:right;
+    box-sizing:border-box;
+  }
+  .themeToggle{ display:flex; gap:8px; margin-top:14px; }
+  .themeToggle button{
+    flex:1; padding:9px 4px; border:none; border-radius:10px; font-size:12px; font-weight:600;
+    background:#3d3d3d; color:var(--key-text);
+  }
+  .themeToggle button.active{ background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; }
+  .manualBtn{
+    width:100%; margin-top:16px; padding:12px; border:none; border-radius:10px;
+    background:#3d3d3d; color:var(--key-text); font-size:14px; font-weight:600;
+  }
+  .manualBox{ max-height:80vh; overflow-y:auto; width:88%; }
+  .manualRow{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:12px 0; border-bottom:1px solid #333;
+  }
+  .manualRow:last-of-type{ border-bottom:none; }
+  .manualRow .ico{ font-size:26px; line-height:1; flex-shrink:0; width:32px; text-align:center; }
+  .manualRow .txt h4{ margin:0 0 3px; font-size:14px; color:var(--key-text); }
+  .manualRow .txt p{ margin:0; font-size:12.5px; color:#b8b6ac; line-height:1.4; }
+  .btnClose{ width:100%; margin-top:16px; padding:12px; border:none; border-radius:10px; background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; font-size:15px; font-weight:600; }
+  .modalBtns{ display:flex; gap:10px; margin-top:16px; }
+  .modalBtns button{
+    flex:1; padding:11px; border:none; border-radius:10px; font-size:15px; font-weight:600;
+  }
+  .btnCancel{ background:#3d3d3d; color:var(--key-text); }
+  .btnSave{ background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; }
+  .btnDanger{ background:linear-gradient(180deg,var(--red),var(--red-lo)); color:#fff; }
+
+  @media screen and (orientation: landscape){
+    .phone{
+      max-width:100vw;
+      width:100vw;
+    }
+    .keypad{
+      height:66vh;
+      grid-template-columns:repeat(8,1fr);
+    }
+    .mainRow .main{
+      font-size:26px;
+    }
+    .historyLog{
+      font-size:14px;
+    }
+    .pctRow .val{ font-size:18px; }
+    .pctRow .lbl{ font-size:13px; }
+    .pctRight .pctval{ font-size:19px; }
+  }
+</style>
+</head>
+<body>
+<div class="phone" id="phoneRoot">
+
+  <!-- ===== SETTINGS MODAL ===== -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modalBox">
+      <h3 id="txtSettingsTitle">Paramètres</h3>
+      <label for="vatInput" id="lblVat">Taux de TVA (%)</label>
+      <input type="number" inputmode="decimal" id="vatInput" value="20">
+      <label style="margin-top:14px;" id="lblTheme">Thème</label>
+      <div class="themeToggle">
+        <button type="button" id="btnThemeLight">Clair</button>
+        <button type="button" id="btnThemeDark">Sombre</button>
+        <button type="button" id="btnThemeAuto">Système</button>
+      </div>
+      <label style="margin-top:14px;" id="lblLang">Langue</label>
+      <div class="themeToggle">
+        <button type="button" id="btnLangFr">Français</button>
+        <button type="button" id="btnLangEn">English</button>
+      </div>
+      <button type="button" id="btnManual" class="manualBtn">📖 Mode d'emploi</button>
+      <div style="font-size:11px; color:#6f6d67; margin-top:12px; text-align:center;">Designed by Mienos</div>
+      <div class="modalBtns">
+        <button class="btnCancel" id="btnCancel">Annuler</button>
+        <button class="btnSave" id="btnSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== USER MANUAL MODAL ===== -->
+  <div class="modalOverlay" id="manualOverlay">
+    <div class="modalBox manualBox">
+      <h3 id="txtManualTitle">Mode d'emploi</h3>
+
+      <div class="manualRow">
+        <div class="ico">🔢</div>
+        <div class="txt">
+          <h4 id="txtManualCalcTitle">Calculatrice</h4>
+          <p id="txtManualCalcDesc">Chiffres, + − × ÷, ( ), %.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">Δ%</div>
+        <div class="txt">
+          <h4 id="txtManualPctTitle">Variation en %</h4>
+          <p id="txtManualPctDesc">Nombre → Δ% → nombre → Δ=.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">💶</div>
+        <div class="txt">
+          <h4 id="txtManualVatTitle">TVA+ / TVA-</h4>
+          <p id="txtManualVatDesc">Ajoute/retire la TVA (taux réglable ci-dessus).</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">📈</div>
+        <div class="txt">
+          <h4 id="txtManualMargeTitle">Marge</h4>
+          <p id="txtManualMargeDesc">Touchez 2 champs (coût/vente/marge), le 3e se calcule.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">🌊</div>
+        <div class="txt">
+          <h4 id="txtManualDesjTitle">Desjoyaux</h4>
+          <p id="txtManualDesjDesc">Revient × coefs → prix TTC. ▲▼ ajustent le coef sélectionné.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">🕘</div>
+        <div class="txt">
+          <h4 id="txtManualHistTitle">Historique</h4>
+          <p id="txtManualHistDesc">Tap = réutiliser · appui long = copier · double-clic C = effacer.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico">🎨</div>
+        <div class="txt">
+          <h4 id="txtManualThemeTitle">Thème</h4>
+          <p id="txtManualThemeDesc">Clair / Sombre / Système.</p>
+        </div>
+      </div>
+
+      <button type="button" class="btnClose" id="btnCloseManual">Fermer</button>
+    </div>
+  </div>
+
+  <!-- ===== CLEAR HISTORY CONFIRM MODAL ===== -->
+  <div class="modalOverlay" id="clearHistOverlay">
+    <div class="modalBox">
+      <h3 id="txtClearHistTitle">Effacer l'historique ?</h3>
+      <div id="txtClearHistDesc" style="font-size:14px; color:#c8c6bc; line-height:1.4;">Cette action supprimera définitivement tout l'historique des calculs enregistrés sur cet appareil.</div>
+      <div class="modalBtns">
+        <button class="btnCancel" id="btnCancelClearHist">Annuler</button>
+        <button class="btnDanger" id="btnConfirmClearHist">Effacer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UNIFIED DISPLAY ===== -->
+  <div class="display">
+    <div class="memline">
+      <button class="gearBtn" id="gearBtn" aria-label="Paramètres">⚙︎</button>
+    </div>
+    <div class="historyLog" id="historyLog"></div>
+    <div class="mainRow">
+      <div class="main" id="mainVal">0</div>
+    </div>
+
+    <div class="divider" id="pctDivider" style="display:none;"></div>
+
+    <div id="pctSection" style="display:none;">
+    <div class="pctRows">
+      <div class="pctLeft">
+        <div class="pctRow" id="rowDe"><span class="lbl" id="lblDeRow">de :</span><span class="val editableVal" id="valDe">—</span></div>
+        <div class="pctRow" id="rowTo"><span class="lbl" id="lblToRow">à :</span><span class="val editableVal" id="valTo">—</span></div>
+        <div class="pctRow"><span class="lbl">Δ =</span><span class="val" id="valDelta">0</span></div>
+      </div>
+      <div class="pctRight">
+        <div class="tag" id="pctTag">&nbsp;</div>
+        <div class="pctval" id="pctVal">—</div>
+      </div>
+    </div>
+    </div>
+
+    <div id="marginSection" style="display:none;">
+      <div class="pctRow" id="rowCost"><span class="lbl" id="lblCostRow">Coût :</span><span class="val editableVal" id="valCost">—</span></div>
+      <div class="pctRow" id="rowMarge"><span class="lbl" id="lblMargeRow">Marge % :</span><span class="val editableVal" id="valMarge">—</span></div>
+      <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow">Vente :</span><span class="val editableVal" id="valVente">—</span></div>
+      <div class="pctRow"><span class="lbl" id="lblProfitRow">Profit :</span><span class="val" id="valProfit">—</span></div>
+    </div>
+
+    <div id="desjSection" style="display:none;">
+      <div class="pctRow" id="rowRevient"><span class="lbl" id="lblRevientRow">Prix de revient :</span><span class="val editableVal" id="valRevient">—</span></div>
+      <div class="pctRow" id="rowSiege"><span class="lbl" id="lblSiegeRow">Coef siège :</span><span class="val editableVal" id="valSiege">—</span></div>
+      <div class="pctRow"><span class="lbl" id="lblPvReseauRow">PV réseau :</span><span class="val" id="valPvReseau">—</span></div>
+      <div class="pctRow" id="rowReseau"><span class="lbl" id="lblReseauRow">Coef réseau :</span><span class="val editableVal" id="valReseau">—</span></div>
+      <div class="pctRow"><span class="lbl" id="lblPvHtRow">PV public HT :</span><span class="val" id="valPvHt">—</span></div>
+      <div class="pctRow"><span class="lbl" id="lblPvTtcRow">PV public TTC :</span><span class="val" id="valPvTtc">—</span></div>
+    </div>
+  </div>
+
+  <!-- ===== SINGLE KEYPAD ===== -->
+  <div class="keypad">
+    <button class="key" data-a="digit" data-v="7">7</button>
+    <button class="key" data-a="digit" data-v="8">8</button>
+    <button class="key" data-a="digit" data-v="9">9</button>
+    <div class="key comboKey">
+      <button class="halfBtn" data-a="paren-open">(</button>
+      <button class="halfBtn" data-a="paren-close">)</button>
+    </div>
+    <button class="key arith" data-a="op" data-v="÷" id="keyDivide"><span id="lblDivide">÷</span></button>
+
+    <button class="key" data-a="digit" data-v="4">4</button>
+    <button class="key" data-a="digit" data-v="5">5</button>
+    <button class="key" data-a="digit" data-v="6">6</button>
+    <button class="key green" data-a="to">Δ%</button>
+    <button class="key arith" data-a="op" data-v="×" id="keyMultiply"><span id="lblMultiply">×</span></button>
+
+    <button class="key" data-a="digit" data-v="1">1</button>
+    <button class="key" data-a="digit" data-v="2">2</button>
+    <button class="key" data-a="digit" data-v="3">3</button>
+    <button class="key op" data-a="percent" id="keyPercent">%</button>
+    <button class="key arith" data-a="op" data-v="−">−</button>
+
+    <button class="key" data-a="digit" data-v="0">0</button>
+    <button class="key" data-a="dot">,</button>
+    <button class="key op" data-a="sign" style="font-size:28px;">±</button>
+    <button class="key op" data-a="back" style="font-size:26px;">⌫</button>
+    <button class="key arith" data-a="op" data-v="+">+</button>
+
+    <button class="key amber" data-a="tvaplus" id="keyTvaPlus"><span id="lblTvaPlus">TVA+</span><span class="sub" id="vatSubPlus">20%</span></button>
+    <button class="key amber" data-a="tvaminus" id="keyTvaMinus"><img id="tvaMinusLogo" src="data:image/png;base64,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" style="display:none; width:82%; max-height:62%; object-fit:contain; margin:0 auto;" alt="Desjoyaux"><span id="lblTvaMinus">TVA-</span><span class="sub" id="vatSubMinus">20%</span></button>
+    <button class="key red" data-a="clear">C</button>
+    <button class="key equalsBtn" data-a="equals" id="keyEquals" data-span="2" style="font-size:22px;">=</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const mainVal = document.getElementById('mainVal');
+  const historyLog = document.getElementById('historyLog');
+
+  const valDe = document.getElementById('valDe');
+  const valTo = document.getElementById('valTo');
+  const valDelta = document.getElementById('valDelta');
+  const pctTag = document.getElementById('pctTag');
+  const pctVal = document.getElementById('pctVal');
+  const rowDe = document.getElementById('rowDe');
+  const rowTo = document.getElementById('rowTo');
+  const pctSection = document.getElementById('pctSection');
+  const pctDivider = document.getElementById('pctDivider');
+
+  const gearBtn = document.getElementById('gearBtn');
+  const vatSubPlus = document.getElementById('vatSubPlus');
+  const vatSubMinus = document.getElementById('vatSubMinus');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const vatInput = document.getElementById('vatInput');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnSave = document.getElementById('btnSave');
+  const keyEquals = document.getElementById('keyEquals');
+  const lblMultiply = document.getElementById('lblMultiply');
+  const lblDivide = document.getElementById('lblDivide');
+  const opButtons = document.querySelectorAll('.keypad [data-a="op"]');
+  const tvaMinusButtons = document.querySelectorAll('.keypad [data-a="tvaminus"]');
+  const tvaPlusButtons = document.querySelectorAll('.keypad [data-a="tvaplus"]');
+  const percentButtons = document.querySelectorAll('.keypad [data-a="percent"]');
+  const phoneRoot = document.getElementById('phoneRoot');
+  const btnThemeLight = document.getElementById('btnThemeLight');
+  const btnThemeDark = document.getElementById('btnThemeDark');
+  const btnThemeAuto = document.getElementById('btnThemeAuto');
+  const clearHistOverlay = document.getElementById('clearHistOverlay');
+  const btnCancelClearHist = document.getElementById('btnCancelClearHist');
+  const btnConfirmClearHist = document.getElementById('btnConfirmClearHist');
+  const manualOverlay = document.getElementById('manualOverlay');
+  const btnManual = document.getElementById('btnManual');
+  const btnCloseManual = document.getElementById('btnCloseManual');
+  const btnLangFr = document.getElementById('btnLangFr');
+  const btnLangEn = document.getElementById('btnLangEn');
+  const txtSettingsTitle = document.getElementById('txtSettingsTitle');
+  const lblVat = document.getElementById('lblVat');
+  const lblTheme = document.getElementById('lblTheme');
+  const lblLang = document.getElementById('lblLang');
+  const txtManualTitle = document.getElementById('txtManualTitle');
+  const txtManualCalcTitle = document.getElementById('txtManualCalcTitle');
+  const txtManualCalcDesc = document.getElementById('txtManualCalcDesc');
+  const txtManualPctTitle = document.getElementById('txtManualPctTitle');
+  const txtManualPctDesc = document.getElementById('txtManualPctDesc');
+  const txtManualVatTitle = document.getElementById('txtManualVatTitle');
+  const txtManualVatDesc = document.getElementById('txtManualVatDesc');
+  const txtManualMargeTitle = document.getElementById('txtManualMargeTitle');
+  const txtManualMargeDesc = document.getElementById('txtManualMargeDesc');
+  const txtManualDesjTitle = document.getElementById('txtManualDesjTitle');
+  const txtManualDesjDesc = document.getElementById('txtManualDesjDesc');
+  const txtManualHistTitle = document.getElementById('txtManualHistTitle');
+  const txtManualHistDesc = document.getElementById('txtManualHistDesc');
+  const txtManualThemeTitle = document.getElementById('txtManualThemeTitle');
+  const txtManualThemeDesc = document.getElementById('txtManualThemeDesc');
+  const txtClearHistTitle = document.getElementById('txtClearHistTitle');
+  const txtClearHistDesc = document.getElementById('txtClearHistDesc');
+  const lblDeRow = document.getElementById('lblDeRow');
+  const lblToRow = document.getElementById('lblToRow');
+  const lblTvaPlus = document.getElementById('lblTvaPlus');
+  const lblTvaMinus = document.getElementById('lblTvaMinus');
+  const marginSection = document.getElementById('marginSection');
+  const rowCost = document.getElementById('rowCost');
+  const rowMarge = document.getElementById('rowMarge');
+  const rowVente = document.getElementById('rowVente');
+  const desjSection = document.getElementById('desjSection');
+  const tvaMinusLogo = document.getElementById('tvaMinusLogo');
+  const rowRevient = document.getElementById('rowRevient');
+  const rowSiege = document.getElementById('rowSiege');
+  const rowReseau = document.getElementById('rowReseau');
+  const valRevient = document.getElementById('valRevient');
+  const valSiege = document.getElementById('valSiege');
+  const valReseau = document.getElementById('valReseau');
+  const valPvReseau = document.getElementById('valPvReseau');
+  const valPvHt = document.getElementById('valPvHt');
+  const valPvTtc = document.getElementById('valPvTtc');
+  const lblRevientRow = document.getElementById('lblRevientRow');
+  const lblSiegeRow = document.getElementById('lblSiegeRow');
+  const lblReseauRow = document.getElementById('lblReseauRow');
+  const lblPvReseauRow = document.getElementById('lblPvReseauRow');
+  const lblPvHtRow = document.getElementById('lblPvHtRow');
+  const lblPvTtcRow = document.getElementById('lblPvTtcRow');
+  const valCost = document.getElementById('valCost');
+  const valMarge = document.getElementById('valMarge');
+  const valVente = document.getElementById('valVente');
+  const valProfit = document.getElementById('valProfit');
+  const lblCostRow = document.getElementById('lblCostRow');
+  const lblMargeRow = document.getElementById('lblMargeRow');
+  const lblVenteRow = document.getElementById('lblVenteRow');
+  const lblProfitRow = document.getElementById('lblProfitRow');
+
+  // ---- shared entry buffer ----
+  let cur = "0";
+  let justEntered = false;
+  let justEvaluated = false;
+
+  // ---- expression tokens: numbers, operators, and parentheses as display strings ----
+  const OPS = ['+','−','×','÷'];
+  function isOperator(t){ return OPS.includes(t); }
+  function isNumberToken(t){ return /^-?[0-9]+(,[0-9]+)?$/.test(t); }
+  function isPercentToken(t){ return typeof t === 'string' && /%$/.test(t); }
+  let tokens = [];
+
+  // ---- history of completed calculations (scrollable, persisted) ----
+  const HISTORY_KEY = 'percentplus_history';
+  let history = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if(Array.isArray(saved)) history = saved.filter(h => h && typeof h.text === 'string' && typeof h.value === 'number');
+  } catch(e){ history = []; }
+
+  function saveHistory(){
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch(e){}
+  }
+  function pushHistory(text, value){
+    const entry = { text, value };
+    history.push(entry);
+    if(history.length > 200) history.shift();
+    saveHistory();
+    appendHistoryLine(entry, true);
+  }
+  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function appendHistoryLine(entry, animate){
+    const div = document.createElement('div');
+    div.className = 'histLine' + (animate ? ' histLineNew' : '');
+    div.innerHTML = escapeHtml(entry.text);
+    div.dataset.value = entry.value;
+    historyLog.appendChild(div);
+    if(animate){
+      historyLog.scrollTop = historyLog.scrollHeight;
+      div.addEventListener('animationend', () => div.classList.remove('histLineNew'), { once:true });
+    }
+  }
+  function renderHistoryInitial(){
+    historyLog.innerHTML = '';
+    history.forEach(h => appendHistoryLine(h, false));
+    historyLog.scrollTop = historyLog.scrollHeight;
+  }
+
+  // tap = load result back into entry; long-press = copy result to clipboard
+  let pressTimer = null;
+  let longPressFired = false;
+  historyLog.addEventListener('pointerdown', (e) => {
+    const line = e.target.closest('.histLine');
+    if(!line) return;
+    longPressFired = false;
+    pressTimer = setTimeout(() => {
+      longPressFired = true;
+      copyLineValue(line);
+    }, 500);
+  });
+  function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } }
+  historyLog.addEventListener('pointerup', (e) => {
+    const line = e.target.closest('.histLine');
+    cancelPress();
+    if(line && !longPressFired) loadValueFromLine(line);
+  });
+  historyLog.addEventListener('pointercancel', cancelPress);
+  historyLog.addEventListener('pointerleave', cancelPress);
+
+  function loadValueFromLine(line){
+    const v = parseFloat(line.dataset.value);
+    if(isNaN(v)) return;
+    cur = fmt(v); tokens = []; justEntered = true; justEvaluated = false;
+    render();
+  }
+  function copyLineValue(line){
+    const v = parseFloat(line.dataset.value);
+    if(isNaN(v)) return;
+    const text = fmtDisp(v);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    flashCopied(line);
+  }
+  function flashCopied(line){
+    line.classList.add('copied');
+    setTimeout(() => line.classList.remove('copied'), 450);
+  }
+
+  // ---- percent-variation state ----
+  let pDe = null, pTo = null;
+
+  // ---- VAT rate (editable via settings, persisted) ----
+  const VAT_KEY = 'percentplus_vatRate';
+  let vatRate = 20;
+  try {
+    const savedVat = parseFloat(localStorage.getItem(VAT_KEY));
+    if(!isNaN(savedVat) && savedVat >= 0) vatRate = savedVat;
+  } catch(e){}
+
+  function triggerPulse(){
+    mainVal.classList.remove('pulse');
+    void mainVal.offsetWidth;
+    mainVal.classList.add('pulse');
+  }
+
+  function layoutEquals(){
+    const keypadEl = document.querySelector('.keypad');
+    const keys = Array.from(keypadEl.querySelectorAll('.key'));
+    const others = keys.filter(k => k !== keyEquals && getComputedStyle(k).display !== 'none');
+    const cols = getComputedStyle(keypadEl).gridTemplateColumns.split(' ').length || 5;
+    const n = others.length;
+    const r = n % cols;
+    const span = r === 0 ? cols : (cols - r);
+    keyEquals.style.gridColumn = `span ${Math.min(span, cols)}`;
+  }
+  window.addEventListener('resize', layoutEquals);
+  window.addEventListener('orientationchange', () => setTimeout(layoutEquals, 60));
+  function fmt(n){
+    if(!isFinite(n)) return t('error');
+    let s = n.toFixed(5);
+    s = s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+    if(s === "" || s === "-") s = "0";
+    return s;
+  }
+  function fmtDisp(n){ return fmt(n).replace('.', ','); }
+
+  function fieldDisplay(field){
+    const raw = (pctActiveField === field) ? cur : (field === 'de' ? deEntry : toEntry);
+    return raw.replace('.', ',');
+  }
+  function fieldValue(field){
+    const raw = (pctActiveField === field) ? cur : (field === 'de' ? deEntry : toEntry);
+    return parseFloat(raw.replace(',', '.'));
+  }
+
+  function render(){
+    const curDisp = cur.replace('.', ',');
+    const showCur = (tokens.length === 0) || (cur !== "0");
+    const liveExpr = showCur ? tokens.concat([curDisp]).join(' ') : tokens.join(' ');
+    mainVal.textContent = liveExpr;
+    const len = liveExpr.length;
+    const fontSize = len <= 12 ? 32 : Math.max(15, 32 - (len - 12) * 0.55);
+    mainVal.style.fontSize = fontSize + 'px';
+
+    pctSection.style.display = pctArmed ? 'block' : 'none';
+    marginSection.style.display = marginArmed ? 'block' : 'none';
+    desjSection.style.display = desjArmed ? 'block' : 'none';
+    pctDivider.style.display = (pctArmed || marginArmed || desjArmed) ? 'block' : 'none';
+    keyEquals.textContent = pctArmed ? 'Δ=' : (marginArmed ? t('marginEquals') : (desjArmed ? t('desjEquals') : '='));
+
+    valDe.textContent = pctArmed ? fieldDisplay('de') : "—";
+    valTo.textContent = pctArmed ? fieldDisplay('to') : "—";
+    rowDe.classList.toggle('active', pctArmed && pctActiveField === 'de');
+    rowTo.classList.toggle('active', pctArmed && pctActiveField === 'to');
+
+    const deVal = pctArmed ? fieldValue('de') : NaN;
+    const toVal = pctArmed ? fieldValue('to') : NaN;
+    if(pctArmed && !isNaN(deVal) && !isNaN(toVal)){
+      const delta = toVal - deVal;
+      const pct = deVal !== 0 ? (delta/deVal)*100 : NaN;
+      valDelta.textContent = fmtDisp(delta);
+      if(isFinite(pct)){
+        const isUp = pct >= 0;
+        pctTag.textContent = isUp ? t('up') : t('down');
+        pctTag.className = 'tag ' + (isUp ? 'up' : 'down');
+        pctVal.textContent = (isUp?'+':'') + pct.toFixed(2).replace('.',',') + '%';
+        pctVal.className = 'pctval ' + (isUp ? 'up' : 'down');
+      } else {
+        pctTag.textContent = ''; pctVal.textContent = '—';
+      }
+    } else {
+      valDelta.textContent = "0";
+      pctTag.textContent = '\u00A0'; pctVal.textContent = '—';
+    }
+
+    const mres = marginArmed ? computeMarginResult() : null;
+    function marginDisplay(field){
+      if(!marginArmed) return "—";
+      let raw;
+      if(mres && field === mres.computedField) raw = fmtDisp(mres[field]);
+      else raw = marginFieldDisplay(field);
+      return field === 'marge' ? raw + '%' : raw + ' €';
+    }
+    valCost.textContent = marginDisplay('cost');
+    valVente.textContent = marginDisplay('vente');
+    valMarge.textContent = marginDisplay('marge');
+    valProfit.textContent = (marginArmed && mres) ? fmtDisp(mres.profit) + ' €' : "—";
+    rowCost.classList.toggle('active', marginArmed && marginActiveField === 'cost');
+    rowVente.classList.toggle('active', marginArmed && marginActiveField === 'vente');
+    rowMarge.classList.toggle('active', marginArmed && marginActiveField === 'marge');
+
+    const dres = desjArmed ? computeDesjResult() : null;
+    valRevient.textContent = desjArmed ? desjFieldDisplay('revient') + ' €' : "—";
+    valSiege.textContent = desjArmed ? desjFieldDisplayDot('siege') : "—";
+    valReseau.textContent = desjArmed ? desjFieldDisplayDot('reseau') : "—";
+    valPvReseau.textContent = dres ? fmtDisp(dres.pvReseau) + ' €' : "—";
+    valPvHt.textContent = dres ? fmtDisp(dres.pvPublicHT) + ' €' : "—";
+    valPvTtc.textContent = dres ? fmtDisp(dres.pvPublicTTC) + ' €' : "—";
+    rowRevient.classList.toggle('active', desjArmed && desjActiveField === 'revient');
+    rowSiege.classList.toggle('active', desjArmed && desjActiveField === 'siege');
+    rowReseau.classList.toggle('active', desjArmed && desjActiveField === 'reseau');
+
+    const showMarginLabel = (cur === "0" && tokens.length === 0 && !pctArmed && !marginArmed && !desjArmed);
+    lblTvaPlus.textContent = showMarginLabel ? t('marginBtn') : t('tvaPlus');
+    vatSubPlus.style.display = showMarginLabel ? 'none' : 'block';
+
+    const showDesjLabel = (cur === "0" && tokens.length === 0 && !pctArmed && !marginArmed && !desjArmed);
+    lblTvaMinus.style.display = showDesjLabel ? 'none' : 'block';
+    lblTvaMinus.textContent = t('tvaMinus');
+    tvaMinusLogo.style.display = showDesjLabel ? 'block' : 'none';
+    vatSubMinus.style.display = showDesjLabel ? 'none' : 'block';
+
+    vatSubPlus.textContent = fmt(vatRate) + '%';
+    vatSubMinus.textContent = fmt(vatRate) + '%';
+
+    const anyArmed = pctArmed || marginArmed || desjArmed;
+    const coefAdjustActive = getAdjustStep() !== null;
+    const opsDisabled = anyArmed || (tokens.length === 0 && cur === "0");
+    opButtons.forEach(el => {
+      const isMulDiv = el.dataset.v === '×' || el.dataset.v === '÷';
+      if(coefAdjustActive && isMulDiv){
+        el.classList.remove('disabledKey');
+      } else {
+        el.classList.toggle('disabledKey', opsDisabled);
+      }
+    });
+    lblDivide.textContent = coefAdjustActive ? '▲' : '÷';
+    lblMultiply.textContent = coefAdjustActive ? '▼' : '×';
+    const tvaMinusDisabled = anyArmed;
+    tvaMinusButtons.forEach(el => el.classList.toggle('disabledKey', tvaMinusDisabled));
+    const tvaPlusDisabled = anyArmed;
+    tvaPlusButtons.forEach(el => el.classList.toggle('disabledKey', tvaPlusDisabled));
+    const percentDisabled = anyArmed || (tokens.length === 0 && cur === "0");
+    percentButtons.forEach(el => el.classList.toggle('disabledKey', percentDisabled));
+  }
+
+  function inputDigit(d){
+    if(justEntered || justEvaluated){ cur = "0"; justEntered = false; justEvaluated = false; }
+    cur = (cur === "0") ? d : cur + d;
+    render();
+  }
+  function inputDot(){
+    if(justEntered || justEvaluated){ cur = "0"; justEntered = false; justEvaluated = false; }
+    if(!cur.includes('.')) cur += '.';
+    render();
+  }
+  function toggleSign(){
+    cur = cur.startsWith('-') ? cur.slice(1) : (cur !== "0" ? '-' + cur : cur);
+    render();
+  }
+  function backspace(){
+    if(cur !== "0" && cur.length > 0){
+      cur = cur.length > 1 ? cur.slice(0,-1) : "0";
+    } else if(tokens.length > 0){
+      const popped = tokens.pop();
+      if(isNumberToken(popped)){
+        cur = popped.replace(',', '.');
+      } else if(isPercentToken(popped)){
+        cur = popped.slice(0, -1).replace(',', '.');
+      } else {
+        cur = "0";
+      }
+    }
+    justEntered = false; justEvaluated = false;
+    render();
+  }
+  function compute(a,b,op){
+    switch(op){ case '+': return a+b; case '−': return a-b; case '×': return a*b; case '÷': return b===0?NaN:a/b; }
+  }
+  function setOp(op){
+    const last = tokens[tokens.length-1];
+    if(justEvaluated){
+      tokens = [cur.replace('.', ',')];
+      justEvaluated = false;
+    } else if(tokens.length > 0 && isOperator(last) && cur === "0"){
+      tokens[tokens.length-1] = op;
+      cur = "0"; justEntered = false;
+      render();
+      return;
+    } else if(cur !== "0" || tokens.length === 0){
+      tokens.push(cur.replace('.', ','));
+    }
+    tokens.push(op);
+    cur = "0"; justEntered = false;
+    render();
+  }
+  function openParen(){
+    const last = tokens[tokens.length-1];
+    if(cur !== "0" || justEvaluated){
+      tokens.push(cur.replace('.', ','));
+      tokens.push('×');
+    } else if(last === ')' || isNumberToken(last)){
+      tokens.push('×');
+    }
+    tokens.push('(');
+    cur = "0"; justEntered = false; justEvaluated = false;
+    render();
+  }
+  function closeParen(){
+    const openCount = tokens.filter(t => t === '(').length;
+    const closeCount = tokens.filter(t => t === ')').length;
+    if(openCount <= closeCount) return;
+    if(cur !== "0"){ tokens.push(cur.replace('.', ',')); cur = "0"; }
+    tokens.push(')');
+    render();
+  }
+  function buildEvalTokens(){
+    let evalTokens = tokens.slice();
+    const last = evalTokens[evalTokens.length-1];
+    if(cur !== "0" || evalTokens.length === 0 || isOperator(last) || last === '('){
+      evalTokens.push(cur.replace('.', ','));
+    }
+    const openCount = evalTokens.filter(t => t === '(').length;
+    const closeCount = evalTokens.filter(t => t === ')').length;
+    for(let i=0; i<openCount-closeCount; i++) evalTokens.push(')');
+    return evalTokens;
+  }
+  function resolvePercentTokens(arr){
+    const out = arr.slice();
+    for(let i=0; i<out.length; i++){
+      if(isPercentToken(out[i])){
+        const pctNum = parseFloat(out[i].slice(0,-1).replace(',', '.'));
+        const op = out[i-1];
+        const baseTok = out[i-2];
+        if(op && isOperator(op) && baseTok && isNumberToken(baseTok) && (op === '+' || op === '−')){
+          const baseVal = parseFloat(baseTok.replace(',', '.'));
+          out[i] = fmt(baseVal * pctNum / 100).replace('.', ',');
+        } else {
+          out[i] = fmt(pctNum / 100).replace('.', ',');
+        }
+      }
+    }
+    return out;
+  }
+  function evaluateTokens(evalTokens){
+    const resolved = resolvePercentTokens(evalTokens);
+    const exprStr = resolved.join(' ');
+    const jsExpr = exprStr
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/−/g, '-')
+      .replace(/,/g, '.');
+    try {
+      const result = Function('"use strict"; return (' + jsExpr + ')')();
+      return (typeof result === 'number' && isFinite(result)) ? result : NaN;
+    } catch(e){ return NaN; }
+  }
+  let pctArmed = false;
+  let deEntry = "0";
+  let toEntry = "0";
+  let pctActiveField = 'de';
+
+  let marginArmed = false;
+  let marginBuffers = { cost: "0", vente: "0", marge: "0" };
+  let marginActiveField = 'cost';
+  let marginPrevField = 'marge';
+
+  let desjArmed = false;
+  let desjBuffers = { revient: "0", siege: "1.68", reseau: "1.68" };
+  let desjActiveField = 'revient';
+
+  const DISABLE_SELECTORS = ['[data-a="op"]','[data-a="paren-open"]','[data-a="paren-close"]','[data-a="percent"]','[data-a="tvaplus"]','[data-a="tvaminus"]','[data-a="to"]'];
+  function setArmedUI(active){
+    DISABLE_SELECTORS.forEach(sel => {
+      document.querySelectorAll('.keypad ' + sel).forEach(el => {
+        const keyEl = el.closest('.key') || el;
+        keyEl.classList.toggle('disabledKey', active);
+      });
+    });
+  }
+
+  function armPctEntry(){
+    deEntry = cur;
+    toEntry = "0";
+    pctActiveField = 'to';
+    cur = "0"; justEntered = false; justEvaluated = false; tokens = [];
+    pctArmed = true;
+    setArmedUI(true);
+    render();
+  }
+
+  function switchActiveField(field){
+    if(!pctArmed || pctActiveField === field) return;
+    if(pctActiveField === 'de') deEntry = cur; else toEntry = cur;
+    pctActiveField = field;
+    cur = (field === 'de') ? deEntry : toEntry;
+    justEntered = true; justEvaluated = false;
+    render();
+  }
+
+  function finalizePctEntry(){
+    if(pctActiveField === 'de') deEntry = cur; else toEntry = cur;
+    pDe = parseFloat(deEntry.replace(',', '.'));
+    pTo = parseFloat(toEntry.replace(',', '.'));
+    logPctResult();
+    const resultVal = pTo;
+    pctArmed = false;
+    setArmedUI(false);
+    pDe = null; pTo = null;
+    cur = fmt(resultVal);
+    justEntered = true; justEvaluated = true;
+    render();
+  }
+
+  // ---- Margin mode: any two of {cost, vente, marge} -> the third (+ profit) ----
+  function resetMarginBuffers(){
+    marginBuffers = { cost: "0", vente: "0", marge: "0" };
+    marginActiveField = 'cost';
+    marginPrevField = 'marge';
+  }
+  function armMarginEntry(){
+    resetMarginBuffers();
+    cur = "0"; justEntered = false; justEvaluated = false; tokens = [];
+    marginArmed = true;
+    setArmedUI(true);
+    render();
+  }
+
+  function switchMarginField(field){
+    if(!marginArmed || marginActiveField === field) return;
+    marginBuffers[marginActiveField] = cur;
+    marginPrevField = marginActiveField;
+    marginActiveField = field;
+    cur = marginBuffers[field];
+    justEntered = true; justEvaluated = false;
+    render();
+  }
+
+  function marginFieldValue(field){
+    const raw = (marginActiveField === field) ? cur : marginBuffers[field];
+    return parseFloat(raw.replace(',', '.'));
+  }
+  function marginFieldDisplay(field){
+    const raw = (marginActiveField === field) ? cur : marginBuffers[field];
+    return raw.replace('.', ',');
+  }
+  function computeMarginResult(){
+    const computedField = ['cost','vente','marge'].find(f => f !== marginActiveField && f !== marginPrevField);
+    const vals = {};
+    vals[marginActiveField] = marginFieldValue(marginActiveField);
+    vals[marginPrevField] = marginFieldValue(marginPrevField);
+    if(isNaN(vals[marginActiveField]) || isNaN(vals[marginPrevField])) return null;
+    if(computedField === 'vente'){
+      if(vals.marge >= 100) return null;
+      vals.vente = vals.cost / (1 - vals.marge/100);
+    } else if(computedField === 'marge'){
+      if(vals.vente === 0) return null;
+      vals.marge = (vals.vente - vals.cost) / vals.vente * 100;
+    } else if(computedField === 'cost'){
+      vals.cost = vals.vente * (1 - vals.marge/100);
+    }
+    const profit = vals.vente - vals.cost;
+    return { cost: vals.cost, marge: vals.marge, vente: vals.vente, profit, computedField };
+  }
+  function marginHistoryLine(res){
+    const labelKey = { cost: 'costLabel', vente: 'venteLabel', marge: 'margeLabel' };
+    const fmtField = (f) => `${t(labelKey[f])} ${fmtDisp(res[f])}${f === 'marge' ? '%' : ' €'}`;
+    const known = ['cost','vente','marge'].filter(f => f !== res.computedField);
+    return `${fmtField(known[0])} + ${fmtField(known[1])} → ${fmtField(res.computedField)} (${t('profitLabel')} ${fmtDisp(res.profit)} €)`;
+  }
+  function finalizeMarginEntry(){
+    marginBuffers[marginActiveField] = cur;
+    const res = computeMarginResult();
+    marginArmed = false;
+    setArmedUI(false);
+    if(res){
+      pushHistory(marginHistoryLine(res), res[res.computedField]);
+      triggerPulse();
+      cur = fmt(res[res.computedField]);
+    } else {
+      cur = "0";
+    }
+    resetMarginBuffers();
+    justEntered = true; justEvaluated = true;
+    render();
+  }
+
+  // ---- Desjoyaux pricing mode: prix de revient × coef siège × coef réseau × TVA ----
+  function resetDesjBuffers(){
+    desjBuffers = { revient: "0", siege: "1.68", reseau: "1.68" };
+    desjActiveField = 'revient';
+  }
+  function armDesjEntry(){
+    resetDesjBuffers();
+    cur = desjBuffers.revient; justEntered = true; justEvaluated = false; tokens = [];
+    desjArmed = true;
+    setArmedUI(true);
+    render();
+  }
+  function switchDesjField(field){
+    if(!desjArmed || desjActiveField === field) return;
+    desjBuffers[desjActiveField] = cur;
+    desjActiveField = field;
+    cur = desjBuffers[field];
+    justEntered = true; justEvaluated = false;
+    render();
+  }
+  function desjFieldValue(field){
+    const raw = (desjActiveField === field) ? cur : desjBuffers[field];
+    return parseFloat(raw.replace(',', '.'));
+  }
+  function desjFieldDisplay(field){
+    const raw = (desjActiveField === field) ? cur : desjBuffers[field];
+    return raw.replace('.', ',');
+  }
+  function desjFieldDisplayDot(field){
+    const raw = (desjActiveField === field) ? cur : desjBuffers[field];
+    return raw;
+  }
+  function computeDesjResult(){
+    const revient = desjFieldValue('revient');
+    const siege = desjFieldValue('siege');
+    const reseau = desjFieldValue('reseau');
+    if(isNaN(revient) || isNaN(siege) || isNaN(reseau)) return null;
+    const pvReseau = revient * siege;
+    const pvPublicHT = pvReseau * reseau;
+    const pvPublicTTC = pvPublicHT * (1 + vatRate/100);
+    return { revient, siege, reseau, pvReseau, pvPublicHT, pvPublicTTC };
+  }
+  function finalizeDesjEntry(){
+    desjBuffers[desjActiveField] = cur;
+    const res = computeDesjResult();
+    desjArmed = false;
+    setArmedUI(false);
+    if(res){
+      pushHistory(
+        `${t('revientLabel')} ${fmtDisp(res.revient)} € × ${fmt(res.siege)} × ${fmt(res.reseau)} × ${t('vatWord')}(${fmt(vatRate)}%) = ${t('pvTtcLabel')} ${fmtDisp(res.pvPublicTTC)} €`,
+        res.pvPublicTTC
+      );
+      triggerPulse();
+      cur = fmt(res.pvPublicTTC);
+    } else {
+      cur = "0";
+    }
+    resetDesjBuffers();
+    justEntered = true; justEvaluated = true;
+    render();
+  }
+
+  function getAdjustStep(){
+    if(desjArmed && (desjActiveField === 'siege' || desjActiveField === 'reseau')) return 0.01;
+    if(marginArmed && marginActiveField === 'marge') return 1;
+    return null;
+  }
+  function adjustActiveField(delta){
+    let val = parseFloat(cur.replace(',', '.'));
+    if(isNaN(val)) val = 0;
+    val = Math.round((val + delta) * 100) / 100;
+    if(val < 0) val = 0;
+    cur = fmt(val);
+    justEntered = true; justEvaluated = false;
+    render();
+  }
+
+  function equals(){
+    if(pctArmed){ finalizePctEntry(); return; }
+    if(marginArmed){ finalizeMarginEntry(); return; }
+    if(desjArmed){ finalizeDesjEntry(); return; }
+    if(tokens.length === 0) return;
+    const evalTokens = buildEvalTokens();
+    const result = evaluateTokens(evalTokens);
+    if(isNaN(result)){
+      mainVal.textContent = t('error');
+      tokens = []; cur = "0"; justEvaluated = false;
+      return;
+    }
+    pushHistory(evalTokens.join(' ') + ' = ' + fmtDisp(result), result);
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    triggerPulse();
+    render();
+  }
+  function clearAll(){
+    cur = "0"; tokens = []; justEntered = false; justEvaluated = false;
+    pDe = null; pTo = null;
+    deEntry = "0"; toEntry = "0"; pctActiveField = 'de';
+    resetMarginBuffers();
+    resetDesjBuffers();
+    if(pctArmed){ pctArmed = false; setArmedUI(false); }
+    if(marginArmed){ marginArmed = false; setArmedUI(false); }
+    if(desjArmed){ desjArmed = false; setArmedUI(false); }
+    render();
+  }
+
+  function logPctResult(){
+    if(pDe === null || pTo === null) return;
+    const delta = pTo - pDe;
+    const pct = pDe !== 0 ? (delta/pDe)*100 : NaN;
+    if(!isFinite(pct)) return;
+    const isUp = pct >= 0;
+    const tag = isUp ? t('up') : t('down');
+    pushHistory(`${fmtDisp(pDe)} → ${fmtDisp(pTo)} (Δ=${fmtDisp(delta)} / ${(isUp?'+':'')}${pct.toFixed(2).replace('.',',')}% ${tag})`, pTo);
+    triggerPulse();
+  }
+
+  // ---- TVA+ / TVA- : applied to the value currently on the main display, with detail shown ----
+  function tvaPlus(){
+    const base = parseFloat(cur) || 0;
+    const taxAmount = base * vatRate / 100;
+    const result = base + taxAmount;
+    pushHistory(`${fmtDisp(base)} + ${fmtDisp(taxAmount)} (${fmt(vatRate)}%${t('vatWord')}) = ${fmtDisp(result)} (${t('inclVat')})`, result);
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    triggerPulse();
+    render();
+  }
+  function tvaMinus(){
+    const base = parseFloat(cur) || 0;
+    const result = base / (1 + vatRate/100);
+    const taxAmount = base - result;
+    pushHistory(`${fmtDisp(base)} - ${fmtDisp(taxAmount)} (${fmt(vatRate)}%${t('vatWord')}) = ${fmtDisp(result)} (${t('exclVat')})`, result);
+    tokens = [];
+    cur = fmt(result);
+    justEntered = false; justEvaluated = true;
+    triggerPulse();
+    render();
+  }
+
+  // ---- % : classic calculator percent (e.g. 5 + 12 % → 5.6) ----
+  function percentKey(){
+    const p = parseFloat(cur.replace(',', '.')) || 0;
+    const lastTok = tokens[tokens.length-1];
+    if(tokens.length > 0 && isOperator(lastTok)){
+      tokens.push(fmtDisp(p) + '%');
+      cur = "0"; justEntered = true; justEvaluated = false;
+    } else {
+      cur = fmt(p/100);
+      justEntered = true; justEvaluated = false;
+    }
+    render();
+  }
+
+  function hapticTap(){
+    if(navigator.vibrate){ navigator.vibrate(8); }
+  }
+
+  let lastClearClickTime = 0;
+
+  document.querySelector('.keypad').addEventListener('pointerdown', (e)=>{
+    const btn = e.target.closest('[data-a]');
+    if(!btn) return;
+    e.preventDefault();
+    hapticTap();
+    const a = btn.dataset.a, v = btn.dataset.v;
+    if(a === 'digit') inputDigit(v);
+    else if(a === 'dot') inputDot();
+    else if(a === 'sign') toggleSign();
+    else if(a === 'op'){
+      const adjStep = getAdjustStep();
+      if(adjStep !== null && (v === '×' || v === '÷')) adjustActiveField(v === '÷' ? adjStep : -adjStep);
+      else setOp(v);
+    }
+    else if(a === 'equals') equals();
+    else if(a === 'clear'){
+      clearAll();
+      const now = Date.now();
+      if(now - lastClearClickTime < 400){
+        lastClearClickTime = 0;
+        openClearHistModal();
+      } else {
+        lastClearClickTime = now;
+      }
+    }
+    else if(a === 'to') armPctEntry();
+    else if(a === 'tvaplus'){
+      if(cur === "0" && tokens.length === 0 && !pctArmed && !marginArmed) armMarginEntry();
+      else tvaPlus();
+    }
+    else if(a === 'tvaminus'){
+      if(cur === "0" && tokens.length === 0 && !pctArmed && !marginArmed && !desjArmed) armDesjEntry();
+      else tvaMinus();
+    }
+    else if(a === 'percent') percentKey();
+    else if(a === 'back') backspace();
+    else if(a === 'paren-open') openParen();
+    else if(a === 'paren-close') closeParen();
+  });
+
+  function openClearHistModal(){ clearHistOverlay.classList.add('open'); }
+  function closeClearHistModal(){ clearHistOverlay.classList.remove('open'); }
+  btnCancelClearHist.addEventListener('click', closeClearHistModal);
+  clearHistOverlay.addEventListener('click', (e)=>{ if(e.target === clearHistOverlay) closeClearHistModal(); });
+  btnConfirmClearHist.addEventListener('click', ()=>{
+    history = [];
+    saveHistory();
+    historyLog.innerHTML = '';
+    closeClearHistModal();
+  });
+
+  rowDe.addEventListener('click', ()=>switchActiveField('de'));
+  rowTo.addEventListener('click', ()=>switchActiveField('to'));
+  rowCost.addEventListener('click', ()=>switchMarginField('cost'));
+  rowMarge.addEventListener('click', ()=>switchMarginField('marge'));
+  rowVente.addEventListener('click', ()=>switchMarginField('vente'));
+  rowRevient.addEventListener('click', ()=>switchDesjField('revient'));
+  rowSiege.addEventListener('click', ()=>switchDesjField('siege'));
+  rowReseau.addEventListener('click', ()=>switchDesjField('reseau'));
+
+  // ---- settings modal ----
+  function openModal(){
+    vatInput.value = vatRate;
+    modalOverlay.classList.add('open');
+    setTimeout(()=>vatInput.focus(), 50);
+  }
+  function closeModal(){ modalOverlay.classList.remove('open'); }
+  gearBtn.addEventListener('click', openModal);
+  btnCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
+  btnSave.addEventListener('click', ()=>{
+    const val = parseFloat(vatInput.value);
+    if(!isNaN(val) && val >= 0){
+      vatRate = val;
+      try { localStorage.setItem(VAT_KEY, String(vatRate)); } catch(e){}
+    }
+    render();
+    closeModal();
+  });
+
+  // ---- user manual modal ----
+  btnManual.addEventListener('click', ()=>{
+    closeModal();
+    manualOverlay.classList.add('open');
+  });
+  btnCloseManual.addEventListener('click', ()=>manualOverlay.classList.remove('open'));
+  manualOverlay.addEventListener('click', (e)=>{ if(e.target === manualOverlay) manualOverlay.classList.remove('open'); });
+
+  // ---- language (fr/en, persisted) ----
+  const I18N = {
+    fr: {
+      settingsTitle: 'Paramètres',
+      vatLabel: 'Taux de TVA (%)',
+      themeLabel: 'Thème',
+      themeLight: 'Clair',
+      themeDark: 'Sombre',
+      themeAuto: 'Système',
+      langLabel: 'Langue',
+      manualBtn: "📖 Mode d'emploi",
+      cancel: 'Annuler',
+      save: 'Enregistrer',
+      manualTitle: "Mode d'emploi",
+      manualCalcTitle: 'Calculatrice',
+      manualCalcDesc: 'Chiffres, + − × ÷, ( ), %.',
+      manualPctTitle: 'Variation en %',
+      manualPctDesc: 'Nombre → Δ% → nombre → Δ=.',
+      manualVatTitle: 'TVA+ / TVA-',
+      manualVatDesc: 'Ajoute/retire la TVA (taux réglable ci-dessus).',
+      manualMargeTitle: 'Marge',
+      manualMargeDesc: 'Touchez 2 champs (coût/vente/marge), le 3e se calcule.',
+      manualDesjTitle: 'Desjoyaux',
+      manualDesjDesc: 'Revient × coefs → prix TTC. ▲▼ ajustent le coef sélectionné.',
+      manualHistTitle: 'Historique',
+      manualHistDesc: "Tap = réutiliser · appui long = copier · double-clic C = effacer.",
+      manualThemeTitle: 'Thème',
+      manualThemeDesc: 'Clair / Sombre / Système.',
+      close: 'Fermer',
+      clearHistTitle: "Effacer l'historique ?",
+      clearHistDesc: "Cette action supprimera définitivement tout l'historique des calculs enregistrés sur cet appareil.",
+      clearHistConfirm: 'Effacer',
+      error: 'Erreur',
+      vatWord: 'TVA',
+      inclVat: 'TTC',
+      exclVat: 'HT',
+      up: 'hausse',
+      down: 'baisse',
+      deLabel: 'de :',
+      toLabel: 'à :',
+      tvaPlus: 'TVA+',
+      tvaMinus: 'TVA-',
+      settingsAria: 'Paramètres',
+      marginBtn: 'Marge',
+      marginEquals: 'Marge=',
+      costLabel: 'Coût :',
+      margeLabel: 'Marge % :',
+      venteLabel: 'Vente :',
+      profitLabel: 'Profit :',
+      ofWord: 'de',
+      desjBtn: 'Desjoyaux',
+      desjEquals: 'PV=',
+      revientLabel: 'Prix de revient',
+      siegeLabel: 'Coef siège :',
+      reseauLabel: 'Coef réseau :',
+      pvReseauLabel: 'PV réseau :',
+      pvHtLabel: 'PV public HT :',
+      pvTtcLabel: 'PV TTC'
+    },
+    en: {
+      settingsTitle: 'Settings',
+      vatLabel: 'VAT rate (%)',
+      themeLabel: 'Theme',
+      themeLight: 'Light',
+      themeDark: 'Dark',
+      themeAuto: 'System',
+      langLabel: 'Language',
+      manualBtn: '📖 User manual',
+      cancel: 'Cancel',
+      save: 'Save',
+      manualTitle: 'User manual',
+      manualCalcTitle: 'Calculator',
+      manualCalcDesc: 'Numbers, + − × ÷, ( ), %.',
+      manualPctTitle: '% Variation',
+      manualPctDesc: 'Number → Δ% → number → Δ=.',
+      manualVatTitle: 'VAT+ / VAT-',
+      manualVatDesc: 'Adds/removes VAT (rate above).',
+      manualMargeTitle: 'Margin',
+      manualMargeDesc: 'Tap 2 fields (cost/sell/margin), the 3rd is computed.',
+      manualDesjTitle: 'Desjoyaux',
+      manualDesjDesc: 'Cost × coefs → final price. ▲▼ adjust the selected coef.',
+      manualHistTitle: 'History',
+      manualHistDesc: 'Tap = reuse · long-press = copy · double-tap C = clear.',
+      manualThemeTitle: 'Theme',
+      manualThemeDesc: 'Light / Dark / System.',
+      close: 'Close',
+      clearHistTitle: 'Clear history?',
+      clearHistDesc: 'This will permanently delete all calculation history stored on this device.',
+      clearHistConfirm: 'Clear',
+      error: 'Error',
+      vatWord: 'VAT',
+      inclVat: 'incl. VAT',
+      exclVat: 'excl. VAT',
+      up: 'up',
+      down: 'down',
+      deLabel: 'from:',
+      toLabel: 'to:',
+      tvaPlus: 'VAT+',
+      tvaMinus: 'VAT-',
+      settingsAria: 'Settings',
+      marginBtn: 'Margin',
+      marginEquals: 'Margin=',
+      costLabel: 'Cost:',
+      margeLabel: 'Margin %:',
+      venteLabel: 'Sell:',
+      profitLabel: 'Profit:',
+      ofWord: 'of',
+      desjBtn: 'Desjoyaux',
+      desjEquals: 'PV=',
+      revientLabel: 'Cost price',
+      siegeLabel: 'HQ coef:',
+      reseauLabel: 'Network coef:',
+      pvReseauLabel: 'Network price:',
+      pvHtLabel: 'Public price excl. VAT:',
+      pvTtcLabel: 'Public price'
+    }
+  };
+  const LANG_KEY = 'percentplus_lang';
+  let currentLang = 'fr';
+  function t(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N.fr[key]; }
+
+  function applyLanguage(lang){
+    currentLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
+    btnLangFr.classList.toggle('active', lang === 'fr');
+    btnLangEn.classList.toggle('active', lang === 'en');
+
+    txtSettingsTitle.textContent = t('settingsTitle');
+    lblVat.textContent = t('vatLabel');
+    lblTheme.textContent = t('themeLabel');
+    lblLang.textContent = t('langLabel');
+    btnThemeLight.textContent = t('themeLight');
+    btnThemeDark.textContent = t('themeDark');
+    btnThemeAuto.textContent = t('themeAuto');
+    btnManual.textContent = t('manualBtn');
+    btnCancel.textContent = t('cancel');
+    btnSave.textContent = t('save');
+    gearBtn.setAttribute('aria-label', t('settingsAria'));
+
+    txtManualTitle.textContent = t('manualTitle');
+    txtManualCalcTitle.textContent = t('manualCalcTitle');
+    txtManualCalcDesc.textContent = t('manualCalcDesc');
+    txtManualPctTitle.textContent = t('manualPctTitle');
+    txtManualPctDesc.innerHTML = t('manualPctDesc');
+    txtManualVatTitle.textContent = t('manualVatTitle');
+    txtManualVatDesc.textContent = t('manualVatDesc');
+    txtManualMargeTitle.textContent = t('manualMargeTitle');
+    txtManualMargeDesc.textContent = t('manualMargeDesc');
+    txtManualDesjTitle.textContent = t('manualDesjTitle');
+    txtManualDesjDesc.textContent = t('manualDesjDesc');
+    txtManualHistTitle.textContent = t('manualHistTitle');
+    txtManualHistDesc.innerHTML = t('manualHistDesc');
+    txtManualThemeTitle.textContent = t('manualThemeTitle');
+    txtManualThemeDesc.textContent = t('manualThemeDesc');
+    btnCloseManual.textContent = t('close');
+
+    txtClearHistTitle.textContent = t('clearHistTitle');
+    txtClearHistDesc.textContent = t('clearHistDesc');
+    btnConfirmClearHist.textContent = t('clearHistConfirm');
+
+    lblDeRow.textContent = t('deLabel');
+    lblToRow.textContent = t('toLabel');
+    lblTvaPlus.textContent = t('tvaPlus');
+    lblTvaMinus.textContent = t('tvaMinus');
+    lblCostRow.textContent = t('costLabel');
+    lblMargeRow.textContent = t('margeLabel');
+    lblVenteRow.textContent = t('venteLabel');
+    lblProfitRow.textContent = t('profitLabel');
+    lblRevientRow.textContent = t('revientLabel') + ' :';
+    lblSiegeRow.textContent = t('siegeLabel');
+    lblReseauRow.textContent = t('reseauLabel');
+    lblPvReseauRow.textContent = t('pvReseauLabel');
+    lblPvHtRow.textContent = t('pvHtLabel');
+    lblPvTtcRow.textContent = t('pvTtcLabel') + ' :';
+
+    render();
+  }
+  btnLangFr.addEventListener('click', ()=>applyLanguage('fr'));
+  btnLangEn.addEventListener('click', ()=>applyLanguage('en'));
+
+  // ---- theme (light/dark/auto, persisted) ----
+  const THEME_KEY = 'percentplus_theme';
+  const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  let currentThemeSetting = 'light';
+
+  function effectiveIsDark(){
+    return currentThemeSetting === 'dark' || (currentThemeSetting === 'auto' && darkMediaQuery.matches);
+  }
+  function applyTheme(theme){
+    currentThemeSetting = theme;
+    phoneRoot.classList.toggle('dark', effectiveIsDark());
+    btnThemeLight.classList.toggle('active', theme === 'light');
+    btnThemeDark.classList.toggle('active', theme === 'dark');
+    btnThemeAuto.classList.toggle('active', theme === 'auto');
+    try { localStorage.setItem(THEME_KEY, theme); } catch(e){}
+  }
+  btnThemeLight.addEventListener('click', ()=>applyTheme('light'));
+  btnThemeDark.addEventListener('click', ()=>applyTheme('dark'));
+  btnThemeAuto.addEventListener('click', ()=>applyTheme('auto'));
+  darkMediaQuery.addEventListener('change', ()=>{
+    if(currentThemeSetting === 'auto') phoneRoot.classList.toggle('dark', effectiveIsDark());
+  });
+  let savedTheme = 'light';
+  try { savedTheme = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
+  applyTheme(savedTheme);
+
+  let savedLang = 'fr';
+  try { savedLang = localStorage.getItem(LANG_KEY) || 'fr'; } catch(e){}
+  applyLanguage(savedLang);
+
+  layoutEquals();
+  renderHistoryInitial();
+  render();
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
