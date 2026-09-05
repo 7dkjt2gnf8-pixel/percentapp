@@ -273,12 +273,24 @@
   #pctSection{ flex-shrink:0; }
 
   /* ---------- keypad ---------- */
+  .keypadHandle{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    height:18px; touch-action:none; cursor:grab;
+  }
+  .keypadHandle .handleBar{
+    width:36px; height:4px; border-radius:2px; background:#eceae0; opacity:.4;
+  }
+  .phone.historyFullscreen .keypadHandle{ display:none; }
   .keypad{
     flex:0 0 auto;
     height:38vh;
+    min-height:0;
+    box-sizing:border-box;
     display:grid; gap:7px; padding:9px;
     grid-template-columns:repeat(5,1fr);
     grid-auto-rows:1fr;
+    overflow:hidden;
+    transition:height .25s ease;
   }
   .keypadHalf{ display:contents; }
   .key{
@@ -687,8 +699,11 @@
     </div>
   </div>
 
+  <!-- ===== KEYPAD DRAG HANDLE (swipe down from here to collapse the keypad) ===== -->
+  <div class="keypadHandle" id="keypadHandle"><div class="handleBar"></div></div>
+
   <!-- ===== SINGLE KEYPAD ===== -->
-  <div class="keypad">
+  <div class="keypad" id="keypadEl">
     <div class="keypadHalf" id="keypadLeft">
     <button class="key" data-a="digit" data-v="7">7</button>
     <button class="key" data-a="digit" data-v="8">8</button>
@@ -731,6 +746,7 @@
 (function(){
   const mainVal = document.getElementById('mainVal');
   const mainRow = document.getElementById('mainRow');
+  const keypadEl = document.getElementById('keypadEl');
   const historyLog = document.getElementById('historyLog');
 
   const valDe = document.getElementById('valDe');
@@ -2878,6 +2894,63 @@
   renderHistoryInitial();
   if(logoDesjToggle && tvaMinusLogo) logoDesjToggle.src = tvaMinusLogo.src;
   if(logoManualDesjTitle && tvaMinusLogo) logoManualDesjTitle.src = tvaMinusLogo.src;
+
+  // ---- Keypad drag handle: swipe down from the handle bar to collapse the
+  // keypad and free up space for the history above (and back up to restore
+  // it). A plain tap on the handle (no real drag) toggles collapse state.
+  const keypadHandle = document.getElementById('keypadHandle');
+  let keypadFullHeight = 0;
+  let kpDragStartY = 0;
+  let kpDragStartHeight = 0;
+  let kpDragging = false;
+  function measureKeypadFullHeight(){
+    const prevTransition = keypadEl.style.transition;
+    const prevHeight = keypadEl.style.height;
+    keypadEl.style.transition = 'none';
+    keypadEl.style.height = '';
+    keypadFullHeight = keypadEl.getBoundingClientRect().height;
+    keypadEl.style.height = prevHeight;
+    keypadEl.style.transition = prevTransition;
+  }
+  measureKeypadFullHeight();
+  window.addEventListener('resize', measureKeypadFullHeight);
+  keypadHandle.addEventListener('pointerdown', (e) => {
+    kpDragging = true;
+    kpDragStartY = e.clientY;
+    kpDragStartHeight = keypadEl.getBoundingClientRect().height;
+    keypadEl.style.transition = 'none';
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', (e) => {
+    if(!kpDragging) return;
+    const delta = e.clientY - kpDragStartY;
+    let newHeight = kpDragStartHeight - delta;
+    newHeight = Math.max(0, Math.min(keypadFullHeight, newHeight));
+    keypadEl.style.height = newHeight + 'px';
+  });
+  function endKeypadDrag(e){
+    if(!kpDragging) return;
+    kpDragging = false;
+    keypadEl.style.transition = 'height .25s ease, padding .25s ease';
+    const totalMoved = e && e.clientY !== undefined ? Math.abs(e.clientY - kpDragStartY) : 999;
+    let collapse;
+    if(totalMoved < 5){
+      collapse = kpDragStartHeight >= keypadFullHeight * 0.5;
+    } else {
+      const currentHeight = keypadEl.getBoundingClientRect().height;
+      collapse = currentHeight < keypadFullHeight * 0.5;
+    }
+    if(collapse){
+      keypadEl.style.height = '0px';
+      keypadEl.style.padding = '0px';
+    } else {
+      keypadEl.style.height = keypadFullHeight + 'px';
+      keypadEl.style.padding = '';
+    }
+  }
+  window.addEventListener('pointerup', endKeypadDrag);
+  window.addEventListener('pointercancel', () => { kpDragging = false; });
+
   render();
 })();
 
