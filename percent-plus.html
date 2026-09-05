@@ -2469,12 +2469,40 @@
       await shareHistoryAsText();
       return;
     }
+    // html2canvas only "sees" the currently visible viewport of a scrolling
+    // element by default. Temporarily remove the scroll constraint so the
+    // element expands to its full content height for the snapshot, then
+    // restore everything right after — the user's scroll position and the
+    // visible UI are unaffected once this completes.
+    const originalHeight = historyLog.style.height;
+    const originalMaxHeight = historyLog.style.maxHeight;
+    const originalOverflow = historyLog.style.overflow;
+    const originalScrollTop = historyLog.scrollTop;
+    historyLog.style.maxHeight = 'none';
+    historyLog.style.height = historyLog.scrollHeight + 'px';
+    historyLog.style.overflow = 'visible';
+    let canvas;
     try {
-      const canvas = await html2canvas(historyLog, {
+      canvas = await html2canvas(historyLog, {
         backgroundColor: effectiveIsDark() ? '#1c1c1a' : '#ffffff',
         scale: 2,
-        useCORS: true
+        useCORS: true,
+        height: historyLog.scrollHeight,
+        windowHeight: historyLog.scrollHeight
       });
+    } catch(e){
+      canvas = null;
+    } finally {
+      historyLog.style.height = originalHeight;
+      historyLog.style.maxHeight = originalMaxHeight;
+      historyLog.style.overflow = originalOverflow;
+      historyLog.scrollTop = originalScrollTop;
+    }
+    if(!canvas){
+      await shareHistoryAsText();
+      return;
+    }
+    try {
       canvas.toBlob(async (blob) => {
         if(!blob){ await shareHistoryAsText(); return; }
         const file = new File([blob], 'historique.png', { type: 'image/png' });
