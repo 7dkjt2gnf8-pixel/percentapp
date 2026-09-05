@@ -2946,6 +2946,7 @@
     } else {
       keypadEl.style.height = keypadFullHeight + 'px';
       keypadEl.style.padding = '';
+      setTimeout(scrollHistoryToBottom, 260);
     }
   }
   window.addEventListener('pointerup', endKeypadDrag);
@@ -2958,6 +2959,7 @@
       keypadEl.style.transition = 'height .25s ease, padding .25s ease';
       keypadEl.style.height = keypadFullHeight + 'px';
       keypadEl.style.padding = '';
+      setTimeout(scrollHistoryToBottom, 260);
     }
   });
 
