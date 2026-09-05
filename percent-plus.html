@@ -183,19 +183,23 @@
   .gearBtn:active{ opacity:.9; }
   #fullscreenBtn{ display:inline-flex; align-items:center; }
   .phone.historyFullscreen .keypad{ display:none; }
-  .phone.historyFullscreen .memline{
-    background:var(--disp-active); margin:calc(-12px - env(safe-area-inset-top, 0px)) -16px 12px -16px;
-    padding:calc(10px + env(safe-area-inset-top, 0px)) 14px 10px 16px;
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .phone.historyFullscreen .memline .gearBtn{ color:#fff; opacity:.9; }
-  .phone.historyFullscreen .memline .gearBtn:active{ opacity:1; }
-  .fsTitle{ display:none; color:#fff; font-weight:700; font-size:15px; margin-right:auto; }
+  .fsTitle{ display:none; color:var(--disp-text); font-weight:700; font-size:15px; }
   .phone.historyFullscreen .fsTitle{ display:block; }
-  #fullscreenBtn.fsClose{
-    width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.22);
-    justify-content:center; margin-right:8px;
+  .phone.historyFullscreen .memline{ justify-content:flex-start; height:auto; padding-bottom:6px; }
+  .fsFooter{
+    display:none; align-items:center; justify-content:space-between;
+    padding:10px 4px calc(10px + env(safe-area-inset-bottom, 0px)) 4px;
+    flex-shrink:0;
   }
+  .phone.historyFullscreen .fsFooter{ display:flex; }
+  .fsFooter .gearBtn{ color:var(--disp-label); opacity:.75; }
+  .fsFooter .gearBtn:active{ opacity:1; }
+  #fullscreenBtn.fsClose{
+    width:34px; height:34px; color:var(--disp-label);
+    border:1.5px solid currentColor; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; opacity:.85;
+  }
+  #fullscreenBtn.fsClose:active{ opacity:1; }
   .mainRow{ display:block; flex-shrink:0; }
   .mainRow .main{
     font-size:32px; font-weight:400; line-height:1.2;
@@ -618,10 +622,11 @@
   <div class="display">
     <div class="memline">
       <span class="fsTitle" id="fsTitle">Historique</span>
-      <button class="gearBtn" id="exportBtn" aria-label="Partager" style="margin-right:10px; display:none;"></button>
-      <button class="gearBtn" id="fullscreenBtn" aria-label="Historique plein écran" style="margin-left:10px; display:none;"></button>
     </div>
     <div class="historyLog" id="historyLog"></div>
+    <div class="fsFooter" id="fsFooter">
+      <button class="gearBtn" id="fullscreenBtn" aria-label="Historique plein écran" style="display:none; margin:0 auto;"></button>
+    </div>
     <div class="undoToast" id="undoToast">
       <span id="txtUndoLabel">Historique effacé</span>
       <span class="undoBtn" id="txtUndoBtn">Annuler</span>
@@ -690,7 +695,7 @@
     <button class="key" data-a="digit" data-v="2">2</button>
     <button class="key" data-a="digit" data-v="3">3</button>
     <button class="key op" data-a="percent" id="keyPercent">%</button>
-    <button class="key arith" data-a="op" data-v="−">−</button>
+    <button class="key arith" data-a="op" data-v="−"><span id="lblMinus">−</span></button>
 
     </div>
     <div class="keypadHalf" id="keypadRight">
@@ -725,7 +730,6 @@
   const pctDivider = document.getElementById('pctDivider');
 
   const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const exportBtn = document.getElementById('exportBtn');
   const vatSubPlus = document.getElementById('vatSubPlus');
   const vatSubMinus = document.getElementById('vatSubMinus');
   const modalOverlay = document.getElementById('modalOverlay');
@@ -745,6 +749,7 @@
   const btnSave = document.getElementById('btnSave');
   const keyEquals = document.getElementById('keyEquals');
   const lblMultiply = document.getElementById('lblMultiply');
+  const lblMinus = document.getElementById('lblMinus');
   const lblDivide = document.getElementById('lblDivide');
   const opButtons = document.querySelectorAll('.keypad [data-a="op"]');
   const tvaMinusButtons = document.querySelectorAll('.keypad [data-a="tvaminus"]');
@@ -992,7 +997,6 @@
     fullscreenBtn.classList.remove('fsClose');
     fullscreenBtn.style.display = 'none';
     fullscreenBtn.setAttribute('aria-label', t('fullscreenLabel'));
-    exportBtn.style.display = 'none';
   }
   function loadValueFromLine(line){
     const entry = history.find(h => h.id === line.dataset.id);
@@ -1326,15 +1330,20 @@
     const opsDisabled = anyArmed || (tokens.length === 0 && cur === "0");
     const divideIsGear = opsDisabled && !coefAdjustActive;
     const multiplyIsZoom = opsDisabled && !coefAdjustActive;
+    const minusIsShare = opsDisabled && !coefAdjustActive;
+    const shareAvailable = minusIsShare && history.length > 0;
     opButtons.forEach(el => {
       const isMulDiv = el.dataset.v === '×' || el.dataset.v === '÷';
       const isDivide = el.dataset.v === '÷';
       const isMultiply = el.dataset.v === '×';
+      const isMinus = el.dataset.v === '−';
       if(coefAdjustActive && isMulDiv){
         el.classList.remove('disabledKey');
       } else if(isDivide && divideIsGear){
         el.classList.remove('disabledKey');
       } else if(isMultiply && multiplyIsZoom){
+        el.classList.remove('disabledKey');
+      } else if(isMinus && shareAvailable){
         el.classList.remove('disabledKey');
       } else {
         el.classList.toggle('disabledKey', opsDisabled);
@@ -1342,6 +1351,7 @@
     });
     lblDivide.innerHTML = coefAdjustActive ? '▲' : (divideIsGear ? gearKeySVG : '÷');
     lblMultiply.innerHTML = coefAdjustActive ? '▼' : (multiplyIsZoom ? zoomKeySVG : '×');
+    lblMinus.innerHTML = minusIsShare ? shareKeySVG : '−';
     const tvaMinusDisabled = anyArmed;
     tvaMinusButtons.forEach(el => el.classList.toggle('disabledKey', tvaMinusDisabled));
     const tvaPlusDisabled = anyArmed;
@@ -2140,6 +2150,7 @@
       if(adjStep !== null && (v === '×' || v === '÷')) adjustActiveField(v === '÷' ? adjStep : -adjStep);
       else if(v === '÷' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) openModal();
       else if(v === '×' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) toggleHistoryFullscreen();
+      else if(v === '−' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0")) && history.length > 0) shareHistory();
       else setOp(v);
     }
     else if(a === 'equals') equals();
@@ -2363,6 +2374,7 @@
   });
 
   const zoomKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
+  const shareKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>';
   const gearKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   const expandSVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
   const collapseSVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>';
@@ -2375,15 +2387,13 @@
     fullscreenBtn.classList.toggle('fsClose', historyFullscreen);
     fullscreenBtn.style.display = historyFullscreen ? 'inline-flex' : 'none';
     fullscreenBtn.setAttribute('aria-label', historyFullscreen ? t('exitFullscreenLabel') : t('fullscreenLabel'));
-    exportBtn.style.display = historyFullscreen ? 'inline-flex' : 'none';
     render();
   }
   fullscreenBtn.addEventListener('click', toggleHistoryFullscreen);
   const exportShareSVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>';
-  exportBtn.innerHTML = exportShareSVG;
   function flashExportFeedback(ok){
-    exportBtn.innerHTML = ok ? '✓' : '✕';
-    setTimeout(() => { exportBtn.innerHTML = exportShareSVG; }, 1000);
+    lblMinus.innerHTML = ok ? '✓' : '✕';
+    setTimeout(() => { render(); }, 1000);
   }
   async function copyExportFallback(body){
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -2392,7 +2402,7 @@
     }
     flashExportFeedback(false);
   }
-  exportBtn.addEventListener('click', async () => {
+  async function shareHistory(){
     const body = history.map(h => {
       let entryText = h.text.replace(/§§(.*?)§§/g, '$1');
       if(h.note) entryText += `\n${t('annotationTitle')} : ${h.note}`;
@@ -2408,7 +2418,7 @@
     } else {
       await copyExportFallback(body);
     }
-  });
+  }
   btnCancel.addEventListener('click', closeModal);
   modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
   btnSave.addEventListener('click', ()=>{
@@ -2678,7 +2688,6 @@
     txtManualThemeDesc.textContent = t('manualThemeDesc');
     txtManualSettingsTitle.textContent = t('manualSettingsTitle');
     txtManualSettingsDesc.textContent = t('manualSettingsDesc');
-    exportBtn.setAttribute('aria-label', t('shareLabel'));
     btnCloseManual.textContent = t('close');
 
     txtClearHistTitle.textContent = t('clearHistTitle');
