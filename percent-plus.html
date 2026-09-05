@@ -961,24 +961,46 @@
   // it fires before pointerup, this was a long-press (annotate). Otherwise
   // pointerup treats it as a short tap (reuse the value / recall Desjoyaux).
   // tap = load result back into entry; long-press = annotate this calculation
+  // A scroll gesture (finger moves more than a few px) must NEVER be treated
+  // as a tap or long-press — it should just scroll the list, nothing else.
   let pressTimer = null;
   let longPressFired = false;
   let pendingAnnotateLine = null;
+  let pressStartX = 0, pressStartY = 0;
+  let pressWasScroll = false;
+  const TAP_MOVE_THRESHOLD = 10; // px of finger movement before it counts as scrolling, not tapping
   historyLog.addEventListener('pointerdown', (e) => {
     const line = e.target.closest('.histLine');
     if(!line) return;
     longPressFired = false;
     pendingAnnotateLine = null;
+    pressWasScroll = false;
+    pressStartX = e.clientX; pressStartY = e.clientY;
     pressTimer = setTimeout(() => {
       longPressFired = true;
       pendingAnnotateLine = line;
       hapticTap();
     }, 500);
   });
+  historyLog.addEventListener('pointermove', (e) => {
+    if(pressWasScroll) return;
+    const movedX = Math.abs(e.clientX - pressStartX);
+    const movedY = Math.abs(e.clientY - pressStartY);
+    if(movedX > TAP_MOVE_THRESHOLD || movedY > TAP_MOVE_THRESHOLD){
+      pressWasScroll = true;
+      pendingAnnotateLine = null;
+      cancelPress();
+    }
+  });
   function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } }
   historyLog.addEventListener('pointerup', (e) => {
     const line = e.target.closest('.histLine');
     cancelPress();
+    if(pressWasScroll){
+      pressWasScroll = false;
+      pendingAnnotateLine = null;
+      return;
+    }
     if(pendingAnnotateLine){
       openAnnotationEditor(pendingAnnotateLine);
       pendingAnnotateLine = null;
