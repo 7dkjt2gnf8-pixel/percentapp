@@ -2950,6 +2950,16 @@
   }
   window.addEventListener('pointerup', endKeypadDrag);
   window.addEventListener('pointercancel', () => { kpDragging = false; });
+  // Tapping the entry field while the keypad is collapsed reopens it,
+  // exactly as if the handle itself had been tapped.
+  mainRow.addEventListener('click', () => {
+    const currentHeight = keypadEl.getBoundingClientRect().height;
+    if(currentHeight < keypadFullHeight * 0.5){
+      keypadEl.style.transition = 'height .25s ease, padding .25s ease';
+      keypadEl.style.height = keypadFullHeight + 'px';
+      keypadEl.style.padding = '';
+    }
+  });
 
   render();
 })();
