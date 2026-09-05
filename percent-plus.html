@@ -442,6 +442,7 @@
     }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="phone" id="phoneRoot">
@@ -595,6 +596,19 @@
   </div>
 
   <!-- ===== CLEAR HISTORY CONFIRM MODAL ===== -->
+
+  <div class="modalOverlay" id="shareChoiceOverlay">
+    <div class="modalBox">
+      <h3 id="txtShareChoiceTitle">Partager l'historique</h3>
+      <div class="modalBtns" style="flex-direction:column; gap:8px;">
+        <button class="btnCancel" id="btnShareAsText" style="width:100%;">Texte</button>
+        <button class="btnCancel" id="btnShareAsImage" style="width:100%;">Capture d'écran</button>
+      </div>
+      <div class="modalBtns">
+        <button class="btnCancel" id="btnCancelShareChoice" style="width:100%;">Annuler</button>
+      </div>
+    </div>
+  </div>
 
   <div class="modalOverlay" id="clearHistOverlay">
     <div class="modalBox">
@@ -763,6 +777,11 @@
   const btnThemeDark = document.getElementById('btnThemeDark');
   const btnThemeAuto = document.getElementById('btnThemeAuto');
   const clearHistOverlay = document.getElementById('clearHistOverlay');
+  const shareChoiceOverlay = document.getElementById('shareChoiceOverlay');
+  const txtShareChoiceTitle = document.getElementById('txtShareChoiceTitle');
+  const btnShareAsText = document.getElementById('btnShareAsText');
+  const btnShareAsImage = document.getElementById('btnShareAsImage');
+  const btnCancelShareChoice = document.getElementById('btnCancelShareChoice');
   const undoToast = document.getElementById('undoToast');
   const btnCancelClearHist = document.getElementById('btnCancelClearHist');
   const btnConfirmClearHist = document.getElementById('btnConfirmClearHist');
@@ -2424,7 +2443,7 @@
     }
     flashExportFeedback(false);
   }
-  async function shareHistory(){
+  async function shareHistoryAsText(){
     const body = history.map(h => {
       let entryText = h.text.replace(/§§(.*?)§§/g, '$1');
       if(h.note) entryText += `\n${t('annotationTitle')} : ${h.note}`;
@@ -2441,6 +2460,52 @@
       await copyExportFallback(body);
     }
   }
+  // Renders the history list to a PNG and shares/downloads it as an image —
+  // an alternative to the plain-text share, for a visual screenshot-style
+  // export. Relies on html2canvas (loaded via CDN); falls back to text
+  // sharing if the library failed to load (e.g. no network on first visit).
+  async function shareHistoryAsImage(){
+    if(typeof html2canvas === 'undefined'){
+      await shareHistoryAsText();
+      return;
+    }
+    try {
+      const canvas = await html2canvas(historyLog, {
+        backgroundColor: effectiveIsDark() ? '#1c1c1a' : '#ffffff',
+        scale: 2,
+        useCORS: true
+      });
+      canvas.toBlob(async (blob) => {
+        if(!blob){ await shareHistoryAsText(); return; }
+        const file = new File([blob], 'historique.png', { type: 'image/png' });
+        if(navigator.canShare && navigator.canShare({ files: [file] })){
+          try {
+            await navigator.share({ files: [file], title: t('exportSubject') });
+          } catch(e){
+            if(e && e.name === 'AbortError') return;
+          }
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'historique.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+      }, 'image/png');
+    } catch(e){
+      await shareHistoryAsText();
+    }
+  }
+  function shareHistory(){
+    if(history.length === 0) return;
+    shareChoiceOverlay.classList.add('open');
+  }
+  btnShareAsText.addEventListener('click', () => { shareChoiceOverlay.classList.remove('open'); shareHistoryAsText(); });
+  btnShareAsImage.addEventListener('click', () => { shareChoiceOverlay.classList.remove('open'); shareHistoryAsImage(); });
+  btnCancelShareChoice.addEventListener('click', () => shareChoiceOverlay.classList.remove('open'));
+  shareChoiceOverlay.addEventListener('click', (e) => { if(e.target === shareChoiceOverlay) shareChoiceOverlay.classList.remove('open'); });
   btnCancel.addEventListener('click', closeModal);
   modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
   btnSave.addEventListener('click', ()=>{
@@ -2537,6 +2602,10 @@
       fullscreenLabel: 'Historique plein écran',
       exitFullscreenLabel: 'Quitter le plein écran',
       exportSubject: 'Historique Percent+',
+      shareChoiceTitle: "Partager l'historique",
+      shareAsTextBtn: 'Texte',
+      shareAsImageBtn: "Capture d'écran",
+      cancelShareChoiceBtn: 'Annuler',
       shareLabel: 'Partager',
       marginBtn: 'Marge',
       marginEquals: 'Marge=',
@@ -2628,6 +2697,10 @@
       fullscreenLabel: 'Fullscreen history',
       exitFullscreenLabel: 'Exit fullscreen',
       exportSubject: 'Percent+ history',
+      shareChoiceTitle: 'Share history',
+      shareAsTextBtn: 'Text',
+      shareAsImageBtn: 'Screenshot',
+      cancelShareChoiceBtn: 'Cancel',
       shareLabel: 'Share',
       marginBtn: 'Margin',
       marginEquals: 'Margin=',
@@ -2711,6 +2784,10 @@
     txtManualSettingsTitle.textContent = t('manualSettingsTitle');
     txtManualSettingsDesc.textContent = t('manualSettingsDesc');
     btnCloseManual.textContent = t('close');
+    txtShareChoiceTitle.textContent = t('shareChoiceTitle');
+    btnShareAsText.textContent = t('shareAsTextBtn');
+    btnShareAsImage.textContent = t('shareAsImageBtn');
+    btnCancelShareChoice.textContent = t('cancelShareChoiceBtn');
 
     txtClearHistTitle.textContent = t('clearHistTitle');
     txtClearHistDesc.textContent = t('clearHistDesc');
