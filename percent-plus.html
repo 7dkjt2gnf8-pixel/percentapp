@@ -2148,9 +2148,9 @@
     else if(a === 'op'){
       const adjStep = getAdjustStep();
       if(adjStep !== null && (v === '×' || v === '÷')) adjustActiveField(v === '÷' ? adjStep : -adjStep);
-      else if(v === '÷' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) openModal();
-      else if(v === '×' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) toggleHistoryFullscreen();
-      else if(v === '−' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0")) && history.length > 0) shareHistory();
+      else if(v === '÷' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(openModal, 0);
+      else if(v === '×' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(toggleHistoryFullscreen, 0);
+      else if(v === '−' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0")) && history.length > 0) setTimeout(shareHistory, 0);
       else setOp(v);
     }
     else if(a === 'equals') equals();
