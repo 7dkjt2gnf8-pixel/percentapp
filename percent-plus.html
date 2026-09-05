@@ -1054,6 +1054,7 @@
     fullscreenBtn.classList.remove('fsClose');
     fullscreenBtn.style.display = 'none';
     fullscreenBtn.setAttribute('aria-label', t('fullscreenLabel'));
+    scrollHistoryToBottom();
   }
   function loadValueFromLine(line){
     const entry = history.find(h => h.id === line.dataset.id);
@@ -2445,6 +2446,7 @@
     fullscreenBtn.style.display = historyFullscreen ? 'inline-flex' : 'none';
     fullscreenBtn.setAttribute('aria-label', historyFullscreen ? t('exitFullscreenLabel') : t('fullscreenLabel'));
     render();
+    if(!historyFullscreen) scrollHistoryToBottom();
   }
   fullscreenBtn.addEventListener('click', toggleHistoryFullscreen);
   const exportShareSVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>';
