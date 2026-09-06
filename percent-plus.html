@@ -1227,10 +1227,10 @@
     mainVal.style.fontSize = fontSize + 'px';
     mainRow.style.display = (marginArmed || desjArmed || historyFullscreen) ? 'none' : 'block';
 
-    pctSection.style.display = (pctArmed && !historyFullscreen) ? 'block' : 'none';
-    marginSection.style.display = (marginArmed && !historyFullscreen) ? 'block' : 'none';
-    desjSection.style.display = (desjArmed && !historyFullscreen) ? 'block' : 'none';
-    pctDivider.style.display = ((pctArmed || marginArmed || desjArmed) && !historyFullscreen) ? 'block' : 'none';
+    pctSection.style.display = (pctArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
+    marginSection.style.display = (marginArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
+    desjSection.style.display = (desjArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
+    pctDivider.style.display = ((pctArmed || marginArmed || desjArmed) && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
     keyEquals.textContent = pctArmed ? 'Δ=' : (marginArmed ? (marginMode === 'remise' ? t('remiseEquals') : (marginMode === 'compensation' ? t('compensationEquals') : t('marginEquals'))) : (desjArmed ? t('desjEquals') : '='));
 
     valDe.textContent = pctArmed ? fieldDisplay('de') : "—";
@@ -2905,6 +2905,7 @@
   let kpDragStartY = 0;
   let kpDragStartHeight = 0;
   let kpDragging = false;
+  let keypadCollapsed = false;
   function measureKeypadFullHeight(){
     const prevTransition = keypadEl.style.transition;
     const prevHeight = keypadEl.style.height;
@@ -2942,6 +2943,8 @@
       const currentHeight = keypadEl.getBoundingClientRect().height;
       collapse = currentHeight < keypadFullHeight * 0.5;
     }
+    keypadCollapsed = collapse;
+    render();
     if(collapse){
       keypadEl.style.height = '0px';
       keypadEl.style.padding = '0px';
@@ -2958,6 +2961,8 @@
   mainRow.addEventListener('click', () => {
     const currentHeight = keypadEl.getBoundingClientRect().height;
     if(currentHeight < keypadFullHeight * 0.5){
+      keypadCollapsed = false;
+      render();
       keypadEl.style.transition = 'height .25s ease, padding .25s ease';
       keypadEl.style.height = keypadFullHeight + 'px';
       keypadEl.style.padding = '';
