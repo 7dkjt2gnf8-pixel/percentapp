@@ -164,10 +164,9 @@
     transition:background .25s ease, transform .15s ease;
     transform:scale(1);
   }
-  .historyLog .histLine.longPressActive{
+  .historyLog .histLineWrap.longPressActive .histLine{
     transform:scale(1.035);
     box-shadow:0 2px 10px rgba(0,0,0,0.15);
-    z-index:2; position:relative;
   }
   .historyLog .histBadge{
     display:inline-block; font-size:10px; font-weight:800; letter-spacing:.4px;
@@ -550,6 +549,13 @@
         <button type="button" id="btnThemeDark">Sombre</button>
         <button type="button" id="btnThemeAuto">Système</button>
       </div>
+      <div class="switchRow" style="margin-top:14px;">
+        <span class="switchLabel" id="lblVibrations">Vibrations</span>
+        <label class="iosSwitch">
+          <input type="checkbox" id="chkVibrations" checked>
+          <span class="iosSlider"></span>
+        </label>
+      </div>
       <div style="font-size:11px; color:#6f6d67; margin-top:16px; text-align:center;">Designed by Mienos</div>
       <div class="modalBtns">
         <button class="btnCancel" id="btnCancel">Annuler</button>
@@ -842,6 +848,7 @@
   const lblModes = document.getElementById('lblModes');
   const chkMarginEnabled = document.getElementById('chkMarginEnabled');
   const chkDesjEnabled = document.getElementById('chkDesjEnabled');
+  const chkVibrations = document.getElementById('chkVibrations');
   const lblMarginToggle = document.getElementById('lblMarginToggle');
   const logoDesjToggle = document.getElementById('logoDesjToggle');
   const txtSettingsTitle = document.getElementById('txtSettingsTitle');
@@ -1042,8 +1049,7 @@
   const TAP_MOVE_THRESHOLD = 10; // px of finger movement before it counts as scrolling, not tapping
   const SWIPE_DELETE_THRESHOLD = 105; // px of leftward drag needed to confirm deletion on release
   function clearLongPressVisual(){
-    const el = historyLog.querySelector('.histLine.longPressActive');
-    if(el) el.classList.remove('longPressActive');
+    historyLog.querySelectorAll('.longPressActive').forEach(el => el.classList.remove('longPressActive'));
   }
   function resetSwipe(){
     if(swipingLine){
@@ -1081,10 +1087,13 @@
     pressTimer = setTimeout(() => {
       longPressFired = true;
       pendingAnnotateLine = line;
-      hapticTap();
+      hapticStrong();
       // Brief visual "pop", like a long-press on an iOS icon, so the user
       // feels something is about to happen before the note editor opens.
-      line.classList.add('longPressActive');
+      // Applied to the wrapper (not the line) so the swipe gesture's own
+      // inline translateX() on the line can never overwrite this scale().
+      const wrapEl = line.closest('.histLineWrap');
+      if(wrapEl) wrapEl.classList.add('longPressActive');
     }, 500);
   });
   // Grows the delete button in step with how far the row has been dragged,
@@ -1171,7 +1180,6 @@
     }
   });
   historyLog.addEventListener('pointercancel', () => { isPressing = false; cancelPress(); clearLongPressVisual(); resetSwipe(); });
-  historyLog.addEventListener('pointerleave', () => { isPressing = false; cancelPress(); clearLongPressVisual(); resetSwipe(); });
 
   function exitHistoryFullscreen(){
     if(!historyFullscreen) return;
@@ -2314,8 +2322,20 @@
     render();
   }
 
-  function hapticTap(){
-    if(navigator.vibrate){ navigator.vibrate(8); }
+  const VIBRATIONS_KEY = 'percentplus_vibrationsEnabled';
+  let vibrationsEnabled = true;
+  try {
+    const savedVib = localStorage.getItem(VIBRATIONS_KEY);
+    if(savedVib !== null) vibrationsEnabled = savedVib === 'true';
+  } catch(e){}
+  // Light tick for every keypad press, like iOS's keyboard typing feedback.
+  function hapticLight(){
+    if(vibrationsEnabled && navigator.vibrate){ navigator.vibrate(6); }
+  }
+  // Stronger pulse for the history long-press, like the haptic when an iOS
+  // home-screen icon starts wiggling and is ready to be moved.
+  function hapticStrong(){
+    if(vibrationsEnabled && navigator.vibrate){ navigator.vibrate(22); }
   }
 
   let lastClearClickTime = 0;
@@ -2324,7 +2344,7 @@
     const btn = e.target.closest('[data-a]');
     if(!btn) return;
     e.preventDefault();
-    hapticTap();
+    hapticLight();
     const a = btn.dataset.a, v = btn.dataset.v;
     showMoneySuffix = false;
     if(a === 'digit') inputDigit(v);
@@ -2525,6 +2545,7 @@
     reseauInput.value = defaultReseau;
     chkMarginEnabled.checked = marginModeEnabled;
     chkDesjEnabled.checked = desjModeEnabled;
+    chkVibrations.checked = vibrationsEnabled;
     updateDecimalsUI();
     updateCurrencyUI();
     renderPresetChips();
@@ -2556,6 +2577,11 @@
     desjModeEnabled = chkDesjEnabled.checked;
     try { localStorage.setItem(DESJ_ENABLED_KEY, desjModeEnabled ? '1' : '0'); } catch(e){}
     render();
+  });
+  chkVibrations.addEventListener('change', () => {
+    vibrationsEnabled = chkVibrations.checked;
+    try { localStorage.setItem(VIBRATIONS_KEY, vibrationsEnabled ? 'true' : 'false'); } catch(e){}
+    if(vibrationsEnabled) hapticLight();
   });
 
   const zoomKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
