@@ -224,12 +224,14 @@
   }
   #fullscreenBtn.fsClose:active{ opacity:1; }
   .mainRow{ display:block; flex-shrink:0; }
+  .inputPanel{ background:rgba(120,140,160,0.08); border-radius:10px; padding:8px 10px; margin-top:4px; }
   .mainRow .main{
     font-size:32px; font-weight:400; line-height:1.2;
     text-align:left; word-wrap:break-word; white-space:normal;
     margin-top:6px; min-height:1.2em;
     border:2px solid var(--cream-line); border-radius:10px;
     padding:8px 10px;
+    background:rgba(120,140,160,0.08);
   }
   @keyframes resultPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
   .mainRow .main.pulse{ animation:resultPulse .4s ease; transform-origin:left center; }
@@ -254,14 +256,24 @@
     border-color:#c9832a; color:#fff;
   }
   .phone.dark .lockBtn{ border-color:#6a6860; color:#a8a69c; }
+  .htTtcSwitch{
+    display:inline-flex; border-radius:9px; overflow:hidden;
+    font-size:10px; font-weight:800; vertical-align:middle; cursor:pointer;
+    margin:0 3px; padding:2px; background:#eeece3; border:1px solid #ddd9cb;
+  }
+  .phone.dark .htTtcSwitch{ background:#2e2e2e; border-color:#444; }
+  .htTtcSwitch .htTtcOption{ padding:2px 7px; border-radius:7px; background:transparent; color:#9a9682; font-weight:700; transition:background .15s ease, color .15s ease; }
+  .htTtcSwitch .htTtcOption.active{ background:#dedad0; color:#2c2b26; font-weight:800; }
+  .phone.dark .htTtcSwitch .htTtcOption{ background:transparent; color:#77756c; }
+  .phone.dark .htTtcSwitch .htTtcOption.active{ background:#4a4a4a; color:#fff; }
   .marginModeToggle{ display:flex; gap:8px; margin-bottom:8px; }
   .marginModeToggle button{
     flex:1; padding:6px 2px; border:none; border-radius:9px; font-size:11px; font-weight:700;
-    background:#e9e6da; color:#7a7869;
+    background:transparent; color:#7a7869;
   }
-  .marginModeToggle button.active{ background:var(--disp-active); color:#fff; }
-  .phone.dark .marginModeToggle button{ background:#3a3a3a; color:#a8a69c; }
-  .phone.dark .marginModeToggle button.active{ background:var(--disp-active); color:#fff; }
+  .marginModeToggle button.active{ background:#dedad0; color:#2c2b26; font-weight:800; }
+  .phone.dark .marginModeToggle button{ background:transparent; color:#a8a69c; }
+  .phone.dark .marginModeToggle button.active{ background:#4a4a4a; color:#fff; }
   .phone.dark .lockBtn.locked{ background:linear-gradient(180deg,#ecab48,#c9832a); border-color:#c9832a; color:#fff; }
   .pctRow .lbl{ font-size:15px; color:var(--disp-label); }
   .pctRow .val{ font-size:21px; font-weight:400; font-variant-numeric:tabular-nums; }
@@ -700,7 +712,7 @@
     </div>
     </div>
 
-    <div id="marginSection" style="display:none;">
+    <div id="marginSection" class="inputPanel" style="display:none;">
       <div class="marginModeToggle" id="marginModeToggle">
         <button type="button" data-mmode="marge" id="btnMmodeMarge">Marge</button>
         <button type="button" data-mmode="remise" id="btnMmodeRemise">Remise</button>
@@ -708,11 +720,11 @@
       </div>
       <div class="pctRow" id="rowCost"><span class="lbl" id="lblCostRow">Coût :</span><span class="val editableVal" id="valCost">—</span></div>
       <div class="pctRow" id="rowMarge"><span class="lbl" id="lblMargeRow">Marge % :</span><span class="val editableVal" id="valMarge">—</span></div>
-      <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow">Vente :</span><span class="val editableVal" id="valVente">—</span></div>
+      <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow"><span id="venteLabelText">Vente</span> <span class="htTtcSwitch" id="htTtcSwitch" style="visibility:hidden;"><span class="htTtcOption" id="optHT">HT</span><span class="htTtcOption" id="optTTC">TTC</span></span> :</span><span class="val editableVal" id="valVente">—</span></div>
       <div class="pctRow"><span class="lbl" id="lblProfitRow">Profit :</span><span class="val" id="valProfit">—</span></div>
     </div>
 
-    <div id="desjSection" style="display:none;">
+    <div id="desjSection" class="inputPanel" style="display:none;">
       <div class="pctRow" id="rowRevient"><span style="display:flex; align-items:center;"><span class="lockBtn" id="lockRevient" data-field="revient">🔓</span><span class="lbl" id="lblRevientRow">Prix de revient :</span></span><span class="val editableVal" id="valRevient">—</span></div>
       <div class="pctRow" id="rowSiege"><span style="display:flex; align-items:center;"><span class="lockBtn" id="lockSiege" data-field="siege">🔒</span><span class="lbl" id="lblSiegeRow">Coef siège :</span></span><span style="display:flex; align-items:baseline; gap:6px;"><span class="coefHint" id="hintSiege"></span><span class="val editableVal" id="valSiege">—</span></span></div>
       <div class="pctRow" id="rowPvReseau"><span style="display:flex; align-items:center;"><span class="lockBtn" id="lockPvReseau" data-field="pvReseau">🔓</span><span class="lbl" id="lblPvReseauRow">PV réseau :</span></span><span class="val editableVal" id="valPvReseau">—</span></div>
@@ -911,6 +923,10 @@
   const btnMmodeMarge = document.getElementById('btnMmodeMarge');
   const btnMmodeRemise = document.getElementById('btnMmodeRemise');
   const btnMmodeCompensation = document.getElementById('btnMmodeCompensation');
+  const venteLabelText = document.getElementById('venteLabelText');
+  const htTtcSwitch = document.getElementById('htTtcSwitch');
+  const optHT = document.getElementById('optHT');
+  const optTTC = document.getElementById('optTTC');
 
   // ---- shared entry buffer ----
   let cur = "0";
@@ -1415,19 +1431,24 @@
     if(marginArmed){
       if(marginMode === 'remise'){
         lblCostRow.textContent = t('avantLabel');
-        lblVenteRow.textContent = t('apresLabel');
+        venteLabelText.textContent = t('apresLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('remiseLabel');
         lblProfitRow.textContent = t('economieLabel');
+        htTtcSwitch.style.visibility = 'hidden';
       } else if(marginMode === 'compensation'){
         lblCostRow.textContent = t('costLabel');
-        lblVenteRow.textContent = t('venteLabel');
+        venteLabelText.textContent = t('venteLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('remiseLabel');
         lblProfitRow.textContent = t('compensationLabel');
+        htTtcSwitch.style.visibility = 'hidden';
       } else {
-        lblCostRow.textContent = t('costLabel');
-        lblVenteRow.textContent = t('venteLabel');
+        lblCostRow.textContent = t('costLabel').replace(/\s*:$/, '') + ' (HT) :';
+        venteLabelText.textContent = t('venteLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('margeLabel');
         lblProfitRow.textContent = t('profitLabel');
+        htTtcSwitch.style.visibility = 'visible';
+        optHT.classList.toggle('active', !venteIsTTC);
+        optTTC.classList.toggle('active', venteIsTTC);
       }
       btnMmodeMarge.classList.toggle('active', marginMode === 'marge');
       btnMmodeRemise.classList.toggle('active', marginMode === 'remise');
@@ -1703,6 +1724,7 @@
   // ==========================================================================
   let marginArmed = false;
   let marginMode = 'marge'; // 'marge' | 'remise' | 'compensation'
+  let venteIsTTC = false; // in 'marge' mode only: whether the Vente field is entered/shown as TTC
   // Each variant (Marge/Remise/Compenser) keeps its OWN independent set of
   // field values — switching the toggle does not carry values over between
   // variants, since they represent conceptually different inputs even though
@@ -1864,6 +1886,7 @@
   function armMarginEntry(){
     resetMarginBuffers();
     marginMode = 'marge';
+    venteIsTTC = false;
     marginBuffers = marginBuffersByMode.marge;
     cur = "0"; justEntered = false; justEvaluated = false; tokens = [];
     marginArmed = true;
@@ -1951,15 +1974,19 @@
     } else {
       if(computedField === 'vente'){
         if(vals.marge >= 100) return null;
-        vals.vente = vals.cost / (1 - vals.marge/100);
+        const venteHT = vals.cost / (1 - vals.marge/100);
+        vals.vente = venteIsTTC ? venteHT * (1 + vatRate/100) : venteHT;
       } else if(computedField === 'marge'){
-        if(vals.vente === 0) return null;
-        vals.marge = (vals.vente - vals.cost) / vals.vente * 100;
+        const venteHT = venteIsTTC ? vals.vente / (1 + vatRate/100) : vals.vente;
+        if(venteHT === 0) return null;
+        vals.marge = (venteHT - vals.cost) / venteHT * 100;
       } else if(computedField === 'cost'){
-        vals.cost = vals.vente * (1 - vals.marge/100);
+        const venteHT = venteIsTTC ? vals.vente / (1 + vatRate/100) : vals.vente;
+        vals.cost = venteHT * (1 - vals.marge/100);
       }
     }
-    const profit = marginMode === 'remise' ? (vals.cost - vals.vente) : (vals.vente - vals.cost);
+    const venteHTForProfit = (marginMode === 'marge' && venteIsTTC) ? vals.vente / (1 + vatRate/100) : vals.vente;
+    const profit = marginMode === 'remise' ? (vals.cost - vals.vente) : (venteHTForProfit - vals.cost);
     return { cost: vals.cost, marge: vals.marge, vente: vals.vente, profit, computedField };
   }
   function marginHistoryLine(res){
@@ -1967,7 +1994,14 @@
       ? { cost: 'avantLabel', vente: 'apresLabel', marge: 'remiseLabel' }
       : { cost: 'costLabel', vente: 'venteLabel', marge: 'margeLabel' };
     const profitKey = marginMode === 'remise' ? 'economieLabel' : 'profitLabel';
-    const fmtField = (f, marked) => `${smallify(t(labelKey[f]))} ${marked ? mark(fmtDisp(res[f])) : fmtDisp(res[f])}${f === 'marge' ? '%' : ' ' + currencySymbol}`;
+    const labelWithSuffix = (f) => {
+      const base = t(labelKey[f]).replace(/\s*:$/, '');
+      if(marginMode !== 'marge') return base + ' :';
+      if(f === 'cost') return base + ' (HT) :';
+      if(f === 'vente') return base + (venteIsTTC ? ' (TTC) :' : ' (HT) :');
+      return base + ' :';
+    };
+    const fmtField = (f, marked) => `${smallify(labelWithSuffix(f))} ${marked ? mark(fmtDisp(res[f])) : fmtDisp(res[f])}${f === 'marge' ? '%' : ' ' + currencySymbol}`;
     const known = ['cost','vente','marge'].filter(f => f !== res.computedField);
     return `${fmtField(known[0], false)}\n${fmtField(known[1], false)}\n${fmtField(res.computedField, true)} (${smallify(t(profitKey))} ${fmtDisp(res.profit)} ${currencySymbol})`;
   }
@@ -2414,6 +2448,7 @@
   btnMmodeMarge.addEventListener('click', ()=>switchMarginMode('marge'));
   btnMmodeRemise.addEventListener('click', ()=>switchMarginMode('remise'));
   btnMmodeCompensation.addEventListener('click', ()=>switchMarginMode('compensation'));
+  htTtcSwitch.addEventListener('click', (e) => { e.stopPropagation(); venteIsTTC = !venteIsTTC; render(); });
   rowVente.addEventListener('click', ()=>switchMarginField('vente'));
   rowRevient.addEventListener('click', ()=>switchDesjField('revient'));
   rowSiege.addEventListener('click', ()=>switchDesjField('siege'));
@@ -2987,7 +3022,6 @@
     btnMmodeCompensation.textContent = t('compensationModeBtn');
     lblCostRow.textContent = t('costLabel');
     lblMargeRow.textContent = t('margeLabel');
-    lblVenteRow.textContent = t('venteLabel');
     lblProfitRow.textContent = t('profitLabel');
     lblRevientRow.textContent = t('revientLabel') + ' :';
     lblSiegeRow.textContent = t('siegeLabel');
