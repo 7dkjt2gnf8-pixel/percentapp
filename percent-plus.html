@@ -224,18 +224,24 @@
   }
   #fullscreenBtn.fsClose:active{ opacity:1; }
   .mainRow{ display:block; flex-shrink:0; }
-  .inputPanel{ background:rgba(120,140,160,0.08); border-radius:10px; padding:8px 10px; margin-top:4px; }
+  .inputPanel{
+    background:rgba(120,140,160,0.08); border-radius:10px; padding:8px 10px; margin-top:4px;
+    border:2px solid #6b6b6b;
+  }
+  .phone.dark .inputPanel{ border-color:#8a8a8a; }
   .mainRow .main{
     font-size:32px; font-weight:400; line-height:1.2;
     text-align:left; word-wrap:break-word; white-space:normal;
     margin-top:6px; min-height:1.2em;
-    border:2px solid var(--cream-line); border-radius:10px;
+    border:2px solid #6b6b6b; border-radius:10px;
     padding:8px 10px;
     background:rgba(120,140,160,0.08);
   }
+  .phone.dark .mainRow .main{ border-color:#8a8a8a; }
   @keyframes resultPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
   .mainRow .main.pulse{ animation:resultPulse .4s ease; transform-origin:left center; }
-  .divider{ height:2px; background:var(--cream-line); margin:8px 0 8px; flex-shrink:0; }
+  .divider{ height:2px; background:#6b6b6b; margin:8px 0 8px; flex-shrink:0; }
+  .phone.dark .divider{ background:#8a8a8a; }
 
   .pctRows{ display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:start; }
   .pctLeft{ border-right:1px solid var(--cream-line); padding-right:12px; }
@@ -704,7 +710,7 @@
 
     <div class="divider" id="pctDivider" style="display:none;"></div>
 
-    <div id="pctSection" style="display:none;">
+    <div id="pctSection" class="inputPanel" style="display:none;">
     <div class="pctRows">
       <div class="pctLeft">
         <div class="pctRow" id="rowDe"><span class="lbl" id="lblDeRow">de :</span><span class="val editableVal" id="valDe">—</span></div>
@@ -1375,12 +1381,12 @@
     const len = liveExpr.length;
     const fontSize = len <= 12 ? 32 : Math.max(15, 32 - (len - 12) * 0.55);
     mainVal.style.fontSize = fontSize + 'px';
-    mainRow.style.display = (marginArmed || desjArmed || historyFullscreen) ? 'none' : 'block';
+    mainRow.style.display = (marginArmed || desjArmed || pctArmed || historyFullscreen) ? 'none' : 'block';
 
     pctSection.style.display = (pctArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
     marginSection.style.display = (marginArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
     desjSection.style.display = (desjArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
-    pctDivider.style.display = ((pctArmed || marginArmed || desjArmed) && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
+    pctDivider.style.display = 'none';
     keyEquals.textContent = pctArmed ? 'Δ=' : (marginArmed ? (marginMode === 'remise' ? t('remiseEquals') : (marginMode === 'compensation' ? t('compensationEquals') : t('marginEquals'))) : (desjArmed ? t('desjEquals') : '='));
 
     valDe.textContent = pctArmed ? fieldDisplay('de') : "—";
