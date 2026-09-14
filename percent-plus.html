@@ -241,6 +241,8 @@
   .pctLeft{ border-right:1px solid var(--cream-line); padding-right:12px; }
   .pctRow{ display:flex; justify-content:space-between; align-items:baseline; padding:1px 0; cursor:pointer; }
   .pctRow.rowBlocked{ cursor:default; }
+  .pctRow.wrapMsg{ align-items:center; }
+  .pctRow .val.longMsg{ font-size:12px; font-weight:600; text-align:right; line-height:1.3; max-width:55%; }
   .pctRow.rowBlocked .val.editableVal{ opacity:.45; }
   .pctRow.rowBlocked .val{ opacity:.45; }
   .coefHint{ font-size:11px; color:#9a9890; font-weight:500; }
@@ -279,7 +281,7 @@
   .phone.dark .marginModeToggle button{ background:transparent; color:#a8a69c; }
   .phone.dark .marginModeToggle button.active{ background:#4a4a4a; color:#fff; }
   .phone.dark .lockBtn.locked{ background:linear-gradient(180deg,#ecab48,#c9832a); border-color:#c9832a; color:#fff; }
-  .pctRow .lbl{ font-size:15px; color:var(--disp-label); }
+  .pctRow .lbl{ font-size:15px; color:var(--disp-label); line-height:1.3; }
   .pctRow .val{ font-size:21px; font-weight:400; font-variant-numeric:tabular-nums; }
   .pctRow .val.editableVal{
     display:inline-block;
@@ -725,7 +727,7 @@
       <div class="pctRow" id="rowCost"><span class="lbl" id="lblCostRow">Coût :</span><span class="val editableVal" id="valCost">—</span></div>
       <div class="pctRow" id="rowMarge"><span class="lbl" id="lblMargeRow">Marge % :</span><span class="val editableVal" id="valMarge">—</span></div>
       <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow"><span id="venteLabelText">Vente</span> <span class="htTtcSwitch" id="htTtcSwitch" style="display:none;"><span class="htTtcOption" id="optHT">HT</span><span class="htTtcOption" id="optTTC">TTC</span></span> :</span><span class="val editableVal" id="valVente">—</span></div>
-      <div class="pctRow"><span class="lbl" id="lblProfitRow">Profit :</span><span class="val" id="valProfit">—</span></div>
+      <div class="pctRow" id="rowProfit"><span class="lbl" id="lblProfitRow">Profit :</span><span class="val" id="valProfit">—</span></div>
     </div>
 
     <div id="desjSection" class="inputPanel" style="display:none;">
@@ -920,6 +922,7 @@
   const valMarge = document.getElementById('valMarge');
   const valVente = document.getElementById('valVente');
   const valProfit = document.getElementById('valProfit');
+  const rowProfit = document.getElementById('rowProfit');
   const lblCostRow = document.getElementById('lblCostRow');
   const lblMargeRow = document.getElementById('lblMargeRow');
   const lblVenteRow = document.getElementById('lblVenteRow');
@@ -1423,10 +1426,15 @@
     valVente.textContent = marginDisplay('vente');
     valMarge.textContent = marginDisplay('marge');
     if(marginMode === 'compensation'){
+      const showImpossible = marginArmed && cres && cres.compensation === null;
+      rowProfit.classList.toggle('wrapMsg', showImpossible);
+      valProfit.classList.toggle('longMsg', showImpossible);
       valProfit.textContent = (marginArmed && cres)
         ? (cres.compensation !== null ? '+' + fmtDisp(cres.compensation) + '%' : t('compensationImpossible'))
         : "—";
     } else {
+      rowProfit.classList.remove('wrapMsg');
+      valProfit.classList.remove('longMsg');
       valProfit.textContent = (marginArmed && mres) ? fmtDisp(mres.profit) + ' ' + currencySymbol : "—";
     }
     rowCost.classList.toggle('active', marginArmed && marginActiveField === 'cost');
@@ -2846,7 +2854,7 @@
       compensationLabel: 'Compensation :',
       compensateByLabel: 'Compenser par',
       compensateBySuffix: 'de ventes en plus',
-      compensationImpossible: 'Impossible (remise ≥ marge)',
+      compensationImpossible: 'Vente à perte',
       margeModeBtn: 'Marge',
       compensationModeBtn: 'Compenser',
       remiseModeBtn: 'Remise',
@@ -2941,7 +2949,7 @@
       compensationLabel: 'Offset:',
       compensateByLabel: 'Offset by',
       compensateBySuffix: 'more sales',
-      compensationImpossible: 'Impossible (discount ≥ margin)',
+      compensationImpossible: 'Selling at a loss',
       margeModeBtn: 'Margin',
       compensationModeBtn: 'Offset',
       remiseModeBtn: 'Discount',
