@@ -1381,7 +1381,7 @@
     const len = liveExpr.length;
     const fontSize = len <= 12 ? 32 : Math.max(15, 32 - (len - 12) * 0.55);
     mainVal.style.fontSize = fontSize + 'px';
-    mainRow.style.display = (marginArmed || desjArmed || pctArmed || historyFullscreen) ? 'none' : 'block';
+    mainRow.style.display = (marginArmed || desjArmed || pctArmed || historyFullscreen || keypadCollapsed) ? 'none' : 'block';
 
     pctSection.style.display = (pctArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
     marginSection.style.display = (marginArmed && !historyFullscreen && !keypadCollapsed) ? 'block' : 'none';
@@ -1742,6 +1742,7 @@
   // ==========================================================================
   let marginArmed = false;
   let marginMode = 'marge'; // 'marge' | 'remise' | 'compensation'
+  let keypadCollapsed = false; // declared early: referenced by render(), which runs during applyLanguage() at startup
   let venteIsTTC = false; // in 'marge' mode only: whether the Vente field is entered/shown as TTC
   // Each variant (Marge/Remise/Compenser) keeps its OWN independent set of
   // field values — switching the toggle does not carry values over between
@@ -3112,7 +3113,6 @@
   let kpDragStartY = 0;
   let kpDragStartHeight = 0;
   let kpDragging = false;
-  let keypadCollapsed = false;
   function measureKeypadFullHeight(){
     const prevTransition = keypadEl.style.transition;
     const prevHeight = keypadEl.style.height;
