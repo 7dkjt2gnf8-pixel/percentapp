@@ -1034,7 +1034,11 @@
   function renderHistoryInitial(){
     historyLog.innerHTML = '';
     history.forEach(h => appendHistoryLine(h, false));
-    historyLog.scrollTop = historyLog.scrollHeight;
+    scrollHistoryToBottom();
+    // Catch any late reflow (web fonts, the Desjoyaux logo image, or the
+    // PWA's safe-area insets settling in) that can still shift the layout
+    // after the very first frame, especially on a cold app launch.
+    setTimeout(scrollHistoryToBottom, 300);
   }
   // Call after any change that resizes the entry area above the keypad
   // (arming Marge/Remise/Compenser or Desjoyaux) — the newly-shown panel
