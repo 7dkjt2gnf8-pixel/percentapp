@@ -266,7 +266,11 @@
   .htTtcSwitch .htTtcOption.active{ background:#dedad0; color:#2c2b26; font-weight:800; }
   .phone.dark .htTtcSwitch .htTtcOption{ background:transparent; color:#77756c; }
   .phone.dark .htTtcSwitch .htTtcOption.active{ background:#4a4a4a; color:#fff; }
-  .marginModeToggle{ display:flex; gap:8px; margin-bottom:8px; }
+  .marginModeToggle{
+    display:flex; gap:4px; margin-bottom:8px;
+    background:#eeece3; border:1px solid #ddd9cb; border-radius:11px; padding:2px;
+  }
+  .phone.dark .marginModeToggle{ background:#2e2e2e; border-color:#444; }
   .marginModeToggle button{
     flex:1; padding:6px 2px; border:none; border-radius:9px; font-size:11px; font-weight:700;
     background:transparent; color:#7a7869;
@@ -575,7 +579,7 @@
       <h3 id="txtManualTitle">Mode d'emploi</h3>
 
       <div class="manualRow">
-        <div class="ico">🔢</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><circle cx="8" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/></svg></div>
         <div class="txt">
           <h4 id="txtManualCalcTitle">Calculatrice</h4>
           <p id="txtManualCalcDesc">Chiffres, + − × ÷, ( ), %.</p>
@@ -591,7 +595,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">💶</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
         <div class="txt">
           <h4 id="txtManualVatTitle">TVA+ / TVA-</h4>
           <p id="txtManualVatDesc">Ajoute/retire la TVA (taux réglable ci-dessus).</p>
@@ -599,7 +603,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">📈</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
         <div class="txt">
           <h4 id="txtManualMargeTitle">Marge</h4>
           <p id="txtManualMargeDesc">Touchez 2 champs (coût/vente/marge), le 3e se calcule.</p>
@@ -607,7 +611,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">🤝</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="txt">
           <h4><img id="logoManualDesjTitle" style="height:20px; width:auto; vertical-align:-5px;" alt="Desjoyaux"></h4>
           <p id="txtManualDesjDesc">Revient × coefs → prix TTC. ▲▼ ajustent le coef sélectionné.</p>
@@ -615,7 +619,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">🕘</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="txt">
           <h4 id="txtManualHistTitle">Historique</h4>
           <p id="txtManualHistDesc">Tap = réutiliser · appui long = copier · double-clic C = effacer.</p>
@@ -623,7 +627,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">🎨</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1.1.9-2 2-2h2.4c2.3 0 4.1-1.8 4.1-4.1C21.5 6 17.2 2 12 2z"/><circle cx="6.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="17.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/></svg></div>
         <div class="txt">
           <h4 id="txtManualThemeTitle">Thème</h4>
           <p id="txtManualThemeDesc">Clair / Sombre / Système.</p>
@@ -631,7 +635,7 @@
       </div>
 
       <div class="manualRow">
-        <div class="ico">⚙️</div>
+        <div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
         <div class="txt">
           <h4 id="txtManualSettingsTitle">Réglages</h4>
           <p id="txtManualSettingsDesc">TVA, coefs par défaut, décimales affichées, devise €/$, activer/désactiver Marge et Desjoyaux.</p>
