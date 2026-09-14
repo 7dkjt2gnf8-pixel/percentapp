@@ -724,7 +724,7 @@
       </div>
       <div class="pctRow" id="rowCost"><span class="lbl" id="lblCostRow">Coût :</span><span class="val editableVal" id="valCost">—</span></div>
       <div class="pctRow" id="rowMarge"><span class="lbl" id="lblMargeRow">Marge % :</span><span class="val editableVal" id="valMarge">—</span></div>
-      <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow"><span id="venteLabelText">Vente</span> <span class="htTtcSwitch" id="htTtcSwitch" style="visibility:hidden;"><span class="htTtcOption" id="optHT">HT</span><span class="htTtcOption" id="optTTC">TTC</span></span> :</span><span class="val editableVal" id="valVente">—</span></div>
+      <div class="pctRow" id="rowVente"><span class="lbl" id="lblVenteRow"><span id="venteLabelText">Vente</span> <span class="htTtcSwitch" id="htTtcSwitch" style="display:none;"><span class="htTtcOption" id="optHT">HT</span><span class="htTtcOption" id="optTTC">TTC</span></span> :</span><span class="val editableVal" id="valVente">—</span></div>
       <div class="pctRow"><span class="lbl" id="lblProfitRow">Profit :</span><span class="val" id="valProfit">—</span></div>
     </div>
 
@@ -1438,19 +1438,19 @@
         venteLabelText.textContent = t('apresLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('remiseLabel');
         lblProfitRow.textContent = t('economieLabel');
-        htTtcSwitch.style.visibility = 'hidden';
+        htTtcSwitch.style.display = 'none';
       } else if(marginMode === 'compensation'){
         lblCostRow.textContent = t('costLabel');
         venteLabelText.textContent = t('venteLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('remiseLabel');
         lblProfitRow.textContent = t('compensationLabel');
-        htTtcSwitch.style.visibility = 'hidden';
+        htTtcSwitch.style.display = 'none';
       } else {
         lblCostRow.textContent = t('costLabel').replace(/\s*:$/, '') + ' (HT) :';
         venteLabelText.textContent = t('venteLabel').replace(/\s*:$/, '');
         lblMargeRow.textContent = t('margeLabel');
         lblProfitRow.textContent = t('profitLabel');
-        htTtcSwitch.style.visibility = 'visible';
+        htTtcSwitch.style.display = 'inline-flex';
         optHT.classList.toggle('active', !venteIsTTC);
         optTTC.classList.toggle('active', venteIsTTC);
       }
