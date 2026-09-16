@@ -82,6 +82,13 @@
     --up:#2f9e5b;
     --down:#c0392b;
     --radius:13px;
+    --settings-bg:#f2f2f7;
+    --settings-card:#ffffff;
+    --settings-text:#1c1c1e;
+    --settings-label:#6d6d72;
+    --settings-separator:rgba(60,60,67,0.29);
+    --settings-control-bg:#e5e5ea;
+    --settings-input-bg:#ffffff;
   }
   .phone.dark{
     --cream:#1c1c1c;
@@ -94,6 +101,13 @@
     --disp-mem:#8a8880;
     --disp-active:#4fd67f;
     --disp-gauge:#3a3a3a;
+    --settings-bg:#000000;
+    --settings-card:#1c1c1e;
+    --settings-text:#f5f5f5;
+    --settings-label:#8e8e93;
+    --settings-separator:rgba(84,84,88,0.65);
+    --settings-control-bg:#2c2c2e;
+    --settings-input-bg:#2c2c2e;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
   html,body{height:100%; overflow-x:hidden; overscroll-behavior:none;}
@@ -223,7 +237,7 @@
     display:inline-flex; align-items:center; justify-content:center; opacity:.85;
   }
   #fullscreenBtn.fsClose:active{ opacity:1; }
-  .mainRow{ display:block; flex-shrink:0; }
+  .mainRow{ display:block; flex-shrink:0; width:100%; box-sizing:border-box; }
   .inputPanel{
     background:rgba(120,140,160,0.08); border-radius:10px; padding:8px 10px; margin-top:4px;
     border:2px solid #6b6b6b;
@@ -236,10 +250,11 @@
     border:2px solid #6b6b6b; border-radius:10px;
     padding:8px 10px;
     background:rgba(120,140,160,0.08);
+    width:100%; box-sizing:border-box;
   }
   .phone.dark .mainRow .main{ border-color:#8a8a8a; }
-  @keyframes resultPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
-  .mainRow .main.pulse{ animation:resultPulse .4s ease; transform-origin:left center; }
+  @keyframes resultPulse{ 0%{ background-color:rgba(58,140,90,0.22); } 100%{ background-color:rgba(120,140,160,0.08); } }
+  .mainRow .main.pulse{ animation:resultPulse .5s ease; }
   .divider{ height:2px; background:#6b6b6b; margin:8px 0 8px; flex-shrink:0; }
   .phone.dark .divider{ background:#8a8a8a; }
 
@@ -264,6 +279,17 @@
     border-color:#c9832a; color:#fff;
   }
   .phone.dark .lockBtn{ border-color:#6a6860; color:#a8a69c; }
+  .currSwapBtn{
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+    border:none; background:transparent; color:#9a9682; padding:4px;
+    cursor:pointer; display:flex; align-items:center; transition:transform .15s ease, color .15s ease;
+    z-index:1;
+  }
+  .currSwapBtn:active{ transform:translateY(-50%) scale(0.85) rotate(180deg); color:var(--disp-active); }
+  .phone.dark .currSwapBtn{ color:#77756c; }
+  .currFlipVal{ display:inline-block; transition:transform .14s ease, opacity .14s ease; }
+  .currFlipVal.flipOut{ transform:translateY(var(--flip-dist,10px)); opacity:0; }
+  .currFlipVal.flipIn{ transform:translateY(calc(var(--flip-dist,10px) * -1)); opacity:0; }
   .htTtcSwitch{
     display:inline-flex; border-radius:9px; overflow:hidden;
     font-size:10px; font-weight:800; vertical-align:middle; cursor:pointer;
@@ -380,11 +406,11 @@
   /* ---------- settings modal ---------- */
   .presetRow{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .presetChip{
-    padding:7px 12px; border-radius:16px; font-size:12px; font-weight:600;
-    background:#3d3d3d; color:var(--key-text); cursor:pointer;
+    padding:6px 12px; border-radius:16px; font-size:12px; font-weight:600;
+    background:var(--settings-control-bg); color:var(--settings-text); cursor:pointer;
     touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none;
   }
-  .presetChip.active{ background:#3d3d3d; border:2px solid var(--green); color:#fff; padding:5px 10px; }
+  .presetChip.active{ background:var(--settings-control-bg); border:2px solid var(--green); color:var(--settings-text); padding:4px 10px; }
   @keyframes chipJiggle{
     0%, 100% { transform:rotate(-1.5deg); }
     50% { transform:rotate(1.5deg); }
@@ -411,43 +437,62 @@
   }
   .modalOverlay.open{ opacity:1; pointer-events:auto; }
   .modalBox{
-    background:linear-gradient(180deg,#2c2c2c,#232323);
-    border-radius:16px; padding:20px; width:82%;
+    background:var(--settings-bg);
+    border-radius:16px; padding:16px; width:84%;
     box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    max-height:82vh; overflow-y:auto;
   }
-  .modalBox h3{ margin:0 0 14px; font-size:16px; font-weight:600; color:var(--key-text); }
-  .modalBox label{ font-size:12px; color:#9a9890; display:block; margin-bottom:6px; }
+  .modalBox h3{ margin:0 0 10px; font-size:16px; font-weight:600; color:var(--settings-text); }
+  .modalBox label{ font-size:12px; color:var(--settings-label); display:block; margin-bottom:4px; }
   .modalBox input{
-    width:100%; font-size:22px; padding:10px 12px; border-radius:10px;
-    border:none; background:var(--cream); color:var(--disp-text); text-align:center;
+    width:100%; font-size:20px; padding:8px 10px; border-radius:9px;
+    border:none; background:var(--settings-input-bg); color:var(--settings-text); text-align:center;
     box-sizing:border-box; -webkit-appearance:none; appearance:none;
     caret-color:transparent;
+    box-shadow:0 0 0 1px var(--settings-separator);
   }
   .modalBox input::selection{ background:transparent; color:inherit; }
   .modalBox input.fieldActive{ font-weight:700; }
-  .themeToggle{ display:flex; gap:8px; margin-top:14px; }
+  .settingsSectionLabel{
+    font-size:12px; font-weight:600; color:var(--settings-label); text-transform:uppercase; letter-spacing:.5px;
+    margin:14px 4px 5px;
+  }
+  .settingsSectionLabel:first-of-type{ margin-top:10px; }
+  .settingsGroup{ background:var(--settings-card); border-radius:12px; overflow:hidden; }
+  .settingsRow{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 14px; min-height:18px;
+    border-bottom:1px solid var(--settings-separator);
+  }
+  .settingsRow:last-child{ border-bottom:none; }
+  .settingsRow.stacked{ flex-direction:column; align-items:stretch; }
+  .settingsRow .rowLabel{ font-size:14.5px; color:var(--settings-text); font-weight:400; }
+  .settingsRow .miniField{ flex:1; text-align:center; }
+  .settingsRow .miniField label{ font-size:11px; display:block; margin-bottom:4px; text-align:center; color:var(--settings-label); }
+  .settingsRow .stackedLabel{ font-size:14.5px; color:var(--settings-text); font-weight:400; margin-bottom:7px; display:block; }
+  .themeToggle{ display:flex; gap:6px; margin-top:10px; }
   .themeToggle button{
-    flex:1; padding:9px 4px; border:none; border-radius:10px; font-size:12px; font-weight:600;
-    background:#3d3d3d; color:var(--key-text);
+    flex:1; padding:7px 4px; border:none; border-radius:9px; font-size:12px; font-weight:600;
+    background:var(--settings-control-bg); color:var(--settings-text);
   }
-  .themeToggle button.active{ background:#3d3d3d; border:2px solid var(--green); color:var(--key-text); }
+  .themeToggle button.active{ background:var(--settings-control-bg); border:2px solid var(--green); color:var(--settings-text); }
   .langMiniBtn{
-    padding:5px 11px; border:none; border-radius:8px; font-size:12px; font-weight:700;
-    background:#3d3d3d; color:var(--key-text);
+    padding:4px 10px; border:none; border-radius:8px; font-size:12px; font-weight:700;
+    background:var(--settings-control-bg); color:var(--settings-text);
   }
-  .langMiniBtn.active{ background:#3d3d3d; border:2px solid var(--green); color:var(--key-text); }
+  .langMiniBtn.active{ background:var(--settings-control-bg); border:2px solid var(--green); color:var(--settings-text); }
   .manualIconBtn{
-    padding:5px 9px; border:none; border-radius:8px; font-size:15px;
-    background:#3d3d3d; color:var(--key-text); line-height:1;
+    padding:4px 8px; border:none; border-radius:8px; font-size:15px;
+    background:var(--settings-control-bg); color:var(--settings-text); line-height:1;
   }
-  .switchRow{ display:flex; align-items:center; justify-content:flex-start; gap:10px; margin-top:12px; }
-  .switchLabel{ font-size:13px; font-weight:600; letter-spacing:.3px; color:#d8d6cc; }
-  .currencyToggle{ display:flex; gap:8px; margin-top:14px; }
+  .switchRow{ display:flex; align-items:center; justify-content:flex-start; gap:10px; margin-top:10px; }
+  .switchLabel{ font-size:13px; font-weight:600; letter-spacing:.3px; color:var(--settings-text); }
+  .currencyToggle{ display:flex; gap:6px; margin-top:10px; }
   .currencyToggle button{
-    width:44px; height:38px; padding:0; border:none; border-radius:10px; font-size:16px; font-weight:700;
-    background:#3d3d3d; color:var(--key-text);
+    width:42px; height:34px; padding:0; border:none; border-radius:9px; font-size:16px; font-weight:700;
+    background:var(--settings-control-bg); color:var(--settings-text);
   }
-  .currencyToggle button.active{ background:#3d3d3d; border:2px solid var(--green); color:var(--key-text); }
+  .currencyToggle button.active{ background:var(--settings-control-bg); border:2px solid var(--green); color:var(--settings-text); }
   .iosSwitch{ position:relative; display:inline-block; width:46px; height:27px; flex-shrink:0; }
   .iosSwitch input{ opacity:0; width:0; height:0; position:absolute; }
   .iosSwitch .iosSlider{ position:absolute; inset:0; background:#54545c; border-radius:27px; transition:background .2s ease; cursor:pointer; }
@@ -461,18 +506,18 @@
   .manualBox{ max-height:80vh; overflow-y:auto; width:88%; }
   .manualRow{
     display:flex; align-items:flex-start; gap:12px;
-    padding:12px 0; border-bottom:1px solid #333;
+    padding:12px 0; border-bottom:1px solid var(--cream-line);
   }
   .manualRow:last-of-type{ border-bottom:none; }
-  .manualRow .ico{ font-size:26px; line-height:1; flex-shrink:0; width:32px; text-align:center; }
-  .manualRow .txt h4{ margin:0 0 3px; font-size:14px; color:var(--key-text); }
-  .manualRow .txt p{ margin:0; font-size:12.5px; color:#b8b6ac; line-height:1.4; }
+  .manualRow .ico{ font-size:26px; line-height:1; flex-shrink:0; width:32px; text-align:center; color:var(--disp-text); }
+  .manualRow .txt h4{ margin:0 0 3px; font-size:14px; color:var(--disp-text); }
+  .manualRow .txt p{ margin:0; font-size:12.5px; color:var(--disp-text-dim); line-height:1.4; }
   .btnClose{ width:100%; margin-top:16px; padding:12px; border:none; border-radius:10px; background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; font-size:15px; font-weight:600; }
-  .modalBtns{ display:flex; gap:10px; margin-top:16px; }
+  .modalBtns{ display:flex; gap:10px; margin-top:12px; }
   .modalBtns button{
     flex:1; padding:11px; border:none; border-radius:10px; font-size:15px; font-weight:600;
   }
-  .btnCancel{ background:#3d3d3d; color:var(--key-text); }
+  .btnCancel{ background:var(--settings-control-bg); color:var(--settings-text); }
   .btnSave{ background:linear-gradient(180deg,var(--green),var(--green-lo)); color:#fff; }
   .btnDanger{ background:linear-gradient(180deg,var(--red),var(--red-lo)); color:#fff; }
 
@@ -517,70 +562,95 @@
           <button type="button" id="btnManual" class="manualIconBtn" aria-label="Mode d'emploi"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></button>
         </div>
       </div>
-      <div style="display:flex; gap:8px; margin-top:14px;">
-        <div style="flex:1;">
-          <label for="vatInput" id="lblVat" style="font-size:11px; display:block; text-align:center;">Taux TVA</label>
-          <input type="text" inputmode="decimal" id="vatInput" value="20" style="font-size:17px; padding:8px 6px;">
-        </div>
-        <div style="flex:1;">
-          <label for="siegeInput" id="lblSiegeDefault" style="font-size:11px; display:block; text-align:center;">Coef Siège</label>
-          <input type="text" inputmode="decimal" id="siegeInput" value="1.68" style="font-size:17px; padding:8px 6px;">
-        </div>
-        <div style="flex:1;">
-          <label for="reseauInput" id="lblReseauDefault" style="font-size:11px; display:block; text-align:center;">Coef réseau</label>
-          <input type="text" inputmode="decimal" id="reseauInput" value="1.68" style="font-size:17px; padding:8px 6px;">
+      <label class="settingsSectionLabel" id="lblCalcSection">Calcul</label>
+      <div class="settingsGroup">
+        <div class="settingsRow">
+          <div class="miniField">
+            <label for="vatInput" id="lblVat">TVA %</label>
+            <input type="text" inputmode="decimal" id="vatInput" value="20" style="font-size:17px; padding:8px 6px;">
+          </div>
+          <div class="miniField">
+            <label for="siegeInput" id="lblSiegeDefault">Coef Siège</label>
+            <input type="text" inputmode="decimal" id="siegeInput" value="1.68" style="font-size:17px; padding:8px 6px;">
+          </div>
+          <div class="miniField">
+            <label for="reseauInput" id="lblReseauDefault">Coef réseau</label>
+            <input type="text" inputmode="decimal" id="reseauInput" value="1.68" style="font-size:17px; padding:8px 6px;">
+          </div>
         </div>
       </div>
-      <label style="margin-top:14px;" id="lblPresets">Profils coefficients</label>
-      <div class="presetRow" id="presetChips"></div>
-      <button type="button" id="btnSavePreset" class="manualIconBtn" style="width:100%; font-size:12px; margin-top:8px; padding:8px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span id="txtSavePreset">Enregistrer comme profil</span></button>
+
+      <label class="settingsSectionLabel" id="lblPresets">Profils coefficients</label>
+      <div class="settingsGroup">
+        <div class="settingsRow stacked">
+          <div class="presetRow" id="presetChips"></div>
+        </div>
+        <div class="settingsRow stacked">
+          <button type="button" id="btnSavePreset" class="manualIconBtn" style="width:100%; font-size:12px; padding:8px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span id="txtSavePreset">Enregistrer comme profil</span></button>
+        </div>
+      </div>
       <div id="presetNameRow" style="display:none; gap:8px; margin-top:8px;">
         <input type="text" id="presetNameInput" placeholder="Nom du profil" style="flex:1; font-size:14px; padding:8px 10px;">
         <button type="button" id="btnConfirmPresetName" style="padding:0 16px; border:none; border-radius:10px; background:var(--green); color:#fff; font-weight:700;">OK</button>
       </div>
-      <label style="margin-top:14px;" id="lblDecimals">Décimales affichées</label>
-      <div class="themeToggle" id="decimalsToggle">
-        <button type="button" data-dec="2">2</button>
-        <button type="button" data-dec="3">3</button>
-        <button type="button" data-dec="4">4</button>
-        <button type="button" data-dec="5">5</button>
+
+      <label class="settingsSectionLabel" id="lblAffichageSection">Affichage</label>
+      <div class="settingsGroup">
+        <div class="settingsRow stacked">
+          <span class="stackedLabel" id="lblDecimals">Décimales affichées</span>
+          <div class="themeToggle" id="decimalsToggle" style="margin-top:0;">
+            <button type="button" data-dec="2">2</button>
+            <button type="button" data-dec="3">3</button>
+            <button type="button" data-dec="4">4</button>
+            <button type="button" data-dec="5">5</button>
+          </div>
+        </div>
+        <div class="settingsRow stacked">
+          <span class="stackedLabel" id="lblCurrency">Devise</span>
+          <div class="currencyToggle" id="currencyToggle" style="margin-top:0;">
+            <button type="button" data-cur="€">€</button>
+            <button type="button" data-cur="$">$</button>
+          </div>
+        </div>
       </div>
-      <label style="margin-top:14px;" id="lblCurrency">Devise</label>
-      <div class="currencyToggle" id="currencyToggle">
-        <button type="button" data-cur="€">€</button>
-        <button type="button" data-cur="$">$</button>
-      </div>
-      <label style="margin-top:14px;" id="lblModes">Modes spéciaux</label>
-      <div style="display:flex; gap:16px;">
-        <div class="switchRow" style="flex:1;">
-          <span class="switchLabel" id="lblMarginToggle">Marge</span>
+
+      <label class="settingsSectionLabel" id="lblModes">Modes spéciaux</label>
+      <div class="settingsGroup">
+        <div class="settingsRow">
+          <span class="rowLabel" id="lblMarginToggle">Marge</span>
           <label class="iosSwitch">
             <input type="checkbox" id="chkMarginEnabled" checked>
             <span class="iosSlider"></span>
           </label>
         </div>
-        <div class="switchRow" style="flex:1;">
-          <span class="switchLabel"><img id="logoDesjToggle" style="height:16px; width:auto; vertical-align:-4px;" alt="Desjoyaux"></span>
+        <div class="settingsRow">
+          <span class="rowLabel"><img id="logoDesjToggle" style="height:16px; width:auto; vertical-align:-4px;" alt="Desjoyaux"></span>
           <label class="iosSwitch">
             <input type="checkbox" id="chkDesjEnabled" checked>
             <span class="iosSlider"></span>
           </label>
         </div>
+        <div class="settingsRow">
+          <span class="rowLabel" id="lblCurrencyToggle">€ / $</span>
+          <label class="iosSwitch">
+            <input type="checkbox" id="chkCurrencyEnabled" checked>
+            <span class="iosSlider"></span>
+          </label>
+        </div>
       </div>
-      <div class="switchRow" style="margin-top:12px;">
-        <span class="switchLabel" id="lblCurrencyToggle">€ / $</span>
-        <label class="iosSwitch">
-          <input type="checkbox" id="chkCurrencyEnabled" checked>
-          <span class="iosSlider"></span>
-        </label>
+
+      <label class="settingsSectionLabel" id="lblTheme">Thème</label>
+      <div class="settingsGroup">
+        <div class="settingsRow stacked">
+          <div class="themeToggle" style="margin-top:0;">
+            <button type="button" id="btnThemeLight">Clair</button>
+            <button type="button" id="btnThemeDark">Sombre</button>
+            <button type="button" id="btnThemeAuto">Système</button>
+          </div>
+        </div>
       </div>
-      <label style="margin-top:14px;" id="lblTheme">Thème</label>
-      <div class="themeToggle">
-        <button type="button" id="btnThemeLight">Clair</button>
-        <button type="button" id="btnThemeDark">Sombre</button>
-        <button type="button" id="btnThemeAuto">Système</button>
-      </div>
-      <div style="font-size:11px; color:#6f6d67; margin-top:16px; text-align:center;">Designed by Mienos</div>
+
+      <div style="font-size:11px; color:var(--settings-label); margin-top:12px; text-align:center;">Designed by Mienos</div>
       <div class="modalBtns">
         <button class="btnCancel" id="btnCancel">Annuler</button>
         <button class="btnSave" id="btnSave">Enregistrer</button>
@@ -761,8 +831,11 @@
     </div>
     <div id="currencySection" class="inputPanel" style="display:none;">
       <div class="pctRow" id="rowCurrRate"><span class="lbl" id="lblCurrRate"><span id="currRateLabelText">Taux</span> <span class="htTtcSwitch" id="currModeSwitch"><span class="htTtcOption" id="optManual">Manuel</span><span class="htTtcOption" id="optLive">Live</span></span> :</span><span class="val editableVal" id="valCurrRate">—</span></div>
-      <div class="pctRow" id="rowEur"><span class="lbl" id="lblEurRow">EUR :</span><span class="val editableVal" id="valEur">—</span></div>
-      <div class="pctRow" id="rowUsd"><span class="lbl" id="lblUsdRow">USD :</span><span class="val editableVal" id="valUsd">—</span></div>
+      <div style="position:relative; padding-left:20px;">
+        <div class="pctRow" id="rowEur"><span class="lbl" id="lblEurRow">EUR :</span><span class="val editableVal currFlipVal" id="valEur">—</span></div>
+        <div class="pctRow" id="rowUsd"><span class="lbl" id="lblUsdRow">USD :</span><span class="val editableVal currFlipVal" id="valUsd">—</span></div>
+        <button type="button" id="btnCurrSwap" class="currSwapBtn" aria-label="Inverser"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+      </div>
     </div>
   </div>
 
@@ -932,6 +1005,7 @@
   const rowEur = document.getElementById('rowEur');
   const valEur = document.getElementById('valEur');
   const rowUsd = document.getElementById('rowUsd');
+  const btnCurrSwap = document.getElementById('btnCurrSwap');
   const valUsd = document.getElementById('valUsd');
   const tvaMinusLogo = document.getElementById('tvaMinusLogo');
   const rowRevient = document.getElementById('rowRevient');
@@ -1439,15 +1513,19 @@
       rowCurrRate.style.cursor = currencyMode === 'manual' ? 'pointer' : 'default';
       rowCurrRate.classList.toggle('rowBlocked', currencyMode !== 'manual');
       if(currencyMode === 'live'){
-        valCurrRate.textContent = liveRateStatus === 'loading' ? t('rateLoading') : (liveRateStatus === 'error' ? t('rateError') : fmtDisp(usdRate));
+        valCurrRate.innerHTML = liveRateStatus === 'loading' ? t('rateLoading') : (liveRateStatus === 'error' ? networkOffSVG : currencyRowDisplay('rate'));
       } else {
         valCurrRate.textContent = currencyRowDisplay('rate');
       }
-      valEur.textContent = currencyRowDisplay('eur');
-      valUsd.textContent = currencyRowDisplay('usd');
+      const topCur = currencyTopIsUsd ? 'usd' : 'eur';
+      const botCur = currencyTopIsUsd ? 'eur' : 'usd';
+      lblEurRow.textContent = (topCur === 'eur' ? t('eurLabel') : t('usdLabel')).replace(/\s*:$/, '') + ' :';
+      valEur.textContent = currencyRowDisplay(topCur);
+      lblUsdRow.textContent = (botCur === 'eur' ? t('eurLabel') : t('usdLabel')).replace(/\s*:$/, '') + ' :';
+      valUsd.textContent = currencyRowDisplay(botCur);
       rowCurrRate.classList.toggle('active', currencyActiveField === 'rate');
-      rowEur.classList.toggle('active', currencyActiveField === 'eur');
-      rowUsd.classList.toggle('active', currencyActiveField === 'usd');
+      rowEur.classList.toggle('active', currencyActiveField === topCur);
+      rowUsd.classList.toggle('active', currencyActiveField === botCur);
     }
     const currEurNow = parseFloat(currencyRowDisplay('eur').replace(',', '.')) || 0;
     const currUsdNow = parseFloat(currencyRowDisplay('usd').replace(',', '.')) || 0;
@@ -1979,10 +2057,12 @@
   }
   let currencyAnchorField = 'eur'; // which of eur/usd was last actively edited — used as the fixed basis while editing the rate
   let currencyAnchorValue = 0;
+  let currencyTopIsUsd = false; // which currency sits in the top row/slot
   function armCurrencyEntry(){
     currencyActiveField = 'eur';
     currencyAnchorField = 'eur';
     currencyAnchorValue = 0;
+    currencyTopIsUsd = false;
     cur = "0"; justEntered = false; justEvaluated = false; tokens = [];
     currencyArmed = true;
     setArmedUI(true);
@@ -2003,7 +2083,7 @@
     }
     if(field === 'eur') return currencyActiveField === 'usd' ? fmtDisp(usdRate ? curNum / usdRate : 0) : fmtDisp(0);
     if(field === 'usd') return currencyActiveField === 'eur' ? fmtDisp(curNum * usdRate) : fmtDisp(0);
-    if(field === 'rate') return fmtDisp(usdRate);
+    if(field === 'rate') return fmtDisp(currencyTopIsUsd && usdRate ? 1/usdRate : usdRate);
     return '0';
   }
   function switchCurrencyField(field){
@@ -2012,7 +2092,7 @@
     const curNum = parseFloat(cur.replace(',', '.')) || 0;
     let newCur = "0";
     if(currencyActiveField === 'rate'){
-      if(curNum > 0) usdRate = curNum;
+      if(curNum > 0) usdRate = currencyTopIsUsd ? 1/curNum : curNum;
       // leaving the rate field: rebuild eur/usd from the anchor + new rate
       if(field === 'eur'){
         newCur = currencyAnchorField === 'eur' ? fmt(currencyAnchorValue) : fmt(usdRate ? currencyAnchorValue / usdRate : 0);
@@ -2028,13 +2108,55 @@
     } else if(field === 'rate'){
       currencyAnchorField = currencyActiveField;
       currencyAnchorValue = curNum;
-      newCur = fmt(usdRate);
+      newCur = fmt(currencyTopIsUsd && usdRate ? 1/usdRate : usdRate);
     }
     currencyActiveField = field;
     cur = newCur;
     justEntered = true; justEvaluated = false;
     render();
   }
+  function swapCurrencyFields(){
+    if(!currencyArmed) return;
+    const dist = rowUsd.getBoundingClientRect().top - rowEur.getBoundingClientRect().top;
+    // Drop the selection highlight before animating so it never appears to
+    // travel with the row — it only reappears on the new top row once
+    // everything has settled back into place.
+    rowEur.classList.remove('active');
+    rowUsd.classList.remove('active');
+    // Slide the two whole rows past each other — one rises, one drops —
+    // rather than just fading the value text in place.
+    rowEur.style.position = 'relative';
+    rowUsd.style.position = 'relative';
+    rowEur.style.zIndex = '2';
+    rowUsd.style.zIndex = '1';
+    rowEur.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
+    rowUsd.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
+    rowEur.style.transform = `translateY(${dist}px)`;
+    rowUsd.style.transform = `translateY(${-dist}px)`;
+    setTimeout(() => {
+      // Genuinely invert which currency sits on top, rather than just
+      // swapping the numbers while EUR always stays first.
+      currencyTopIsUsd = !currencyTopIsUsd;
+      // The top field is always the one pre-selected after a swap, never
+      // the bottom one.
+      const newTopField = currencyTopIsUsd ? 'usd' : 'eur';
+      cur = currencyRowDisplay(newTopField);
+      currencyActiveField = newTopField;
+      justEntered = true; justEvaluated = false;
+      rowEur.style.transition = 'none';
+      rowUsd.style.transition = 'none';
+      rowEur.style.transform = 'none';
+      rowUsd.style.transform = 'none';
+      render();
+      requestAnimationFrame(() => {
+        rowEur.style.zIndex = '';
+        rowUsd.style.zIndex = '';
+        rowEur.style.position = '';
+        rowUsd.style.position = '';
+      });
+    }, 320);
+  }
+  let liveRateInterval = null;
   async function fetchLiveRate(){
     liveRateStatus = 'loading';
     render();
@@ -2052,18 +2174,30 @@
     }
     render();
   }
+  function startLiveRateRefresh(){
+    stopLiveRateRefresh();
+    liveRateInterval = setInterval(fetchLiveRate, 120000); // refresh every 2 minutes
+  }
+  function stopLiveRateRefresh(){
+    if(liveRateInterval){ clearInterval(liveRateInterval); liveRateInterval = null; }
+  }
   function finalizeCurrencyEntry(){
     const curNum = parseFloat(cur.replace(',', '.')) || 0;
-    if(currencyActiveField === 'rate' && curNum > 0) usdRate = curNum;
+    if(currencyActiveField === 'rate' && curNum > 0) usdRate = currencyTopIsUsd ? 1/curNum : curNum;
     const eurVal = currencyActiveField === 'usd' ? (usdRate ? curNum / usdRate : 0) : (currencyActiveField === 'eur' ? curNum : parseFloat(currencyRowDisplay('eur').replace(',','.')) || 0);
     const usdVal = currencyActiveField === 'eur' ? curNum * usdRate : (currencyActiveField === 'usd' ? curNum : parseFloat(currencyRowDisplay('usd').replace(',','.')) || 0);
+    stopLiveRateRefresh();
     currencyArmed = false;
     setArmedUI(false);
-    pushHistory(`${fmtDisp(eurVal)} € = ${mark(fmtDisp(usdVal))} $ (${fmtDisp(usdRate)})`, usdVal, { htype: 'tva' });
+    const rateForHistory = currencyTopIsUsd && usdRate ? 1/usdRate : usdRate;
+    const line = currencyTopIsUsd
+      ? `${fmtDisp(usdVal)} $ = ${mark(fmtDisp(eurVal))} € (${fmtDisp(rateForHistory)})`
+      : `${fmtDisp(eurVal)} € = ${mark(fmtDisp(usdVal))} $ (${fmtDisp(rateForHistory)})`;
+    const resultVal = currencyTopIsUsd ? eurVal : usdVal;
+    pushHistory(line, resultVal, { htype: 'tva' });
     tokens = [];
-    cur = fmt(usdVal);
+    cur = fmt(resultVal);
     justEntered = false; justEvaluated = true;
-    triggerPulse();
     render();
   }
   function armMarginEntry(){
@@ -2200,7 +2334,6 @@
       if(cres){
         const resultVal = cres.compensation !== null ? cres.compensation : 0;
         pushHistory(compensationHistoryLine(cres), resultVal, { htype: 'compensation' });
-        triggerPulse();
         cur = cres.compensation !== null ? fmt(cres.compensation) : "0";
       } else {
         cur = "0";
@@ -2223,7 +2356,6 @@
     setArmedUI(false);
     if(res){
       pushHistory(marginHistoryLine(res), res[res.computedField], { htype: marginMode === 'remise' ? 'remise' : 'margin' });
-      triggerPulse();
       cur = fmt(res[res.computedField]);
     } else {
       cur = "0";
@@ -2379,7 +2511,6 @@
       const fmtCoef = (f) => fmt(res[f]);
       const line = `${smallify(t('histRevientLabel'))} : ${fmtDisp(res.revient)}${currencySymbol}HT\n${smallify(t('histPvReseauLabel'))} : ${fmtDisp(res.pvReseau)}${currencySymbol}HT (×${fmtCoef('siege')})\n${smallify(t('histPvPublicLabel'))} : ${mark(fmtDisp(res.pvPublicTTC))}${currencySymbol}TTC (×${fmtCoef('reseau')}${t('histAtVat')} ${fmt(vatRate)}%)`;
       pushHistory(line, res.pvPublicTTC, { desj: { revient: res.revient, siege: res.siege, reseau: res.reseau }, htype: 'desjoyaux' });
-      triggerPulse();
       cur = fmt(res.pvPublicTTC);
     } else {
       cur = "0";
@@ -2479,7 +2610,7 @@
     if(pctArmed){ pctArmed = false; setArmedUI(false); }
     if(marginArmed){ marginArmed = false; setArmedUI(false); }
     if(desjArmed){ desjArmed = false; setArmedUI(false); }
-    if(currencyArmed){ currencyArmed = false; setArmedUI(false); }
+    if(currencyArmed){ stopLiveRateRefresh(); currencyArmed = false; setArmedUI(false); }
     render();
   }
 
@@ -2490,7 +2621,6 @@
     if(!isFinite(pct)) return;
     const isUp = pct >= 0;
     pushHistory(`${fmtDisp(pDe)} → ${mark(fmtDisp(pTo))} (Δ=${fmtDisp(delta)} / ${(isUp?'+':'')}${pct.toFixed(2).replace('.',',')}%)`, pTo, { htype: 'pct' });
-    triggerPulse();
   }
 
   // ---- TVA+ / TVA- : applied to the value currently on the main display, with detail shown ----
@@ -2637,15 +2767,18 @@
   htTtcSwitch.addEventListener('click', (e) => { e.stopPropagation(); venteIsTTC = !venteIsTTC; render(); });
   rowVente.addEventListener('click', ()=>switchMarginField('vente'));
   rowCurrRate.addEventListener('click', ()=>switchCurrencyField('rate'));
-  rowEur.addEventListener('click', ()=>switchCurrencyField('eur'));
-  rowUsd.addEventListener('click', ()=>switchCurrencyField('usd'));
+  rowEur.addEventListener('click', ()=>switchCurrencyField(currencyTopIsUsd ? 'usd' : 'eur'));
+  rowUsd.addEventListener('click', ()=>switchCurrencyField(currencyTopIsUsd ? 'eur' : 'usd'));
+  btnCurrSwap.addEventListener('click', (e) => { e.stopPropagation(); swapCurrencyFields(); });
   currModeSwitch.addEventListener('click', (e) => {
     e.stopPropagation();
     if(currencyMode === 'manual'){
       currencyMode = 'live';
       fetchLiveRate();
+      startLiveRateRefresh();
     } else {
       currencyMode = 'manual';
+      stopLiveRateRefresh();
       render();
     }
   });
@@ -2812,7 +2945,8 @@
 
   const zoomKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
   const shareKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>';
-  const currencyKeySVG = '<svg viewBox="0 0 34 16" style="width:72%; height:auto; display:block; margin:0 auto;"><text x="17" y="8" text-anchor="middle" dominant-baseline="central" font-size="14" fill="currentColor" font-weight="700" font-family="Arial,sans-serif">€/$</text></svg>';
+  const currencyKeySVG = '<svg viewBox="0 0 34 16" style="width:72%; height:auto; display:block; margin:0 auto;"><text x="17" y="8" text-anchor="middle" dominant-baseline="central" font-size="14" fill="currentColor" font-weight="400" font-family="Arial,sans-serif">€/$</text></svg>';
+  const networkOffSVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
   const gearKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   const expandSVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
   const collapseSVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>';
@@ -2974,7 +3108,7 @@
   const I18N = {
     fr: {
       settingsTitle: 'Paramètres',
-      vatLabel: 'Taux de TVA (%)',
+      vatLabel: 'TVA %',
       siegeDefaultLabel: 'Coef Siège',
       reseauDefaultLabel: 'Coef réseau',
       themeLabel: 'Thème',
