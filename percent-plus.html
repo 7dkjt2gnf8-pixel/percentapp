@@ -1331,6 +1331,7 @@
     const v = parseFloat(line.dataset.value);
     if(isNaN(v)) return;
     exitHistoryFullscreen();
+    disarmAllPanels();
     cur = fmt(v); justEntered = true; justEvaluated = false;
     render();
   }
@@ -2005,7 +2006,14 @@
     });
   }
 
+  function disarmAllPanels(){
+    if(pctArmed){ pctArmed = false; setArmedUI(false); }
+    if(marginArmed){ marginArmed = false; setArmedUI(false); }
+    if(desjArmed){ desjArmed = false; setArmedUI(false); }
+    if(currencyArmed){ stopLiveRateRefresh(); currencyArmed = false; setArmedUI(false); }
+  }
   function armPctEntry(){
+    disarmAllPanels();
     if(tokens.length > 0){
       const evalTokens = buildEvalTokens();
       const result = evaluateTokens(evalTokens);
@@ -2059,6 +2067,7 @@
   let currencyAnchorValue = 0;
   let currencyTopIsUsd = false; // which currency sits in the top row/slot
   function armCurrencyEntry(){
+    disarmAllPanels();
     currencyActiveField = 'eur';
     currencyAnchorField = 'eur';
     currencyAnchorValue = 0;
@@ -2201,6 +2210,7 @@
     render();
   }
   function armMarginEntry(){
+    disarmAllPanels();
     resetMarginBuffers();
     marginMode = 'marge';
     venteIsTTC = false;
@@ -2373,6 +2383,7 @@
     desjLocked = { revient:false, siege:true, reseau:true, pvReseau:false, pvPublicHT:false, pvPublicTTC:false };
   }
   function armDesjEntry(){
+    disarmAllPanels();
     resetDesjBuffers();
     cur = desjBuffers.revient; justEntered = true; justEvaluated = false; tokens = [];
     desjArmed = true;
@@ -2607,10 +2618,7 @@
     resetMarginBuffers();
     resetDesjBuffers();
     desjDirty = false;
-    if(pctArmed){ pctArmed = false; setArmedUI(false); }
-    if(marginArmed){ marginArmed = false; setArmedUI(false); }
-    if(desjArmed){ desjArmed = false; setArmedUI(false); }
-    if(currencyArmed){ stopLiveRateRefresh(); currencyArmed = false; setArmedUI(false); }
+    disarmAllPanels();
     render();
   }
 
