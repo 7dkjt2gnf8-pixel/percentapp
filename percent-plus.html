@@ -567,6 +567,13 @@
           </label>
         </div>
       </div>
+      <div class="switchRow" style="margin-top:12px;">
+        <span class="switchLabel" id="lblCurrencyToggle">€ / $</span>
+        <label class="iosSwitch">
+          <input type="checkbox" id="chkCurrencyEnabled" checked>
+          <span class="iosSlider"></span>
+        </label>
+      </div>
       <label style="margin-top:14px;" id="lblTheme">Thème</label>
       <div class="themeToggle">
         <button type="button" id="btnThemeLight">Clair</button>
@@ -623,6 +630,14 @@
         <div class="txt">
           <h4><img id="logoManualDesjTitle" style="height:20px; width:auto; vertical-align:-5px;" alt="Desjoyaux"></h4>
           <p id="txtManualDesjDesc">Revient × coefs → prix TTC. ▲▼ ajustent le coef sélectionné.</p>
+        </div>
+      </div>
+
+      <div class="manualRow">
+        <div class="ico"><svg viewBox="0 0 34 24" width="30" height="26"><text x="17" y="13" text-anchor="middle" dominant-baseline="central" font-size="20" fill="currentColor" font-weight="700" font-family="Arial,sans-serif">€/$</text></svg></div>
+        <div class="txt">
+          <h4 id="txtManualCurrencyTitle">Conversion € / $</h4>
+          <p id="txtManualCurrencyDesc">Taux manuel ou live (bouton sur la ligne Taux). Désactivable dans les réglages.</p>
         </div>
       </div>
 
@@ -871,6 +886,7 @@
   const lblModes = document.getElementById('lblModes');
   const chkMarginEnabled = document.getElementById('chkMarginEnabled');
   const chkDesjEnabled = document.getElementById('chkDesjEnabled');
+  const chkCurrencyEnabled = document.getElementById('chkCurrencyEnabled');
   const lblMarginToggle = document.getElementById('lblMarginToggle');
   const logoDesjToggle = document.getElementById('logoDesjToggle');
   const txtSettingsTitle = document.getElementById('txtSettingsTitle');
@@ -887,6 +903,8 @@
   const txtManualMargeDesc = document.getElementById('txtManualMargeDesc');
   const logoManualDesjTitle = document.getElementById('logoManualDesjTitle');
   const txtManualDesjDesc = document.getElementById('txtManualDesjDesc');
+  const txtManualCurrencyTitle = document.getElementById('txtManualCurrencyTitle');
+  const txtManualCurrencyDesc = document.getElementById('txtManualCurrencyDesc');
   const txtManualHistTitle = document.getElementById('txtManualHistTitle');
   const txtManualHistDesc = document.getElementById('txtManualHistDesc');
   const txtManualThemeTitle = document.getElementById('txtManualThemeTitle');
@@ -1314,13 +1332,17 @@
   // ---- Marge / Desjoyaux modes enable/disable, persisted ----
   const MARGIN_ENABLED_KEY = 'percentplus_marginEnabled';
   const DESJ_ENABLED_KEY = 'percentplus_desjEnabled';
+  const CURRENCY_ENABLED_KEY = 'percentplus_currencyEnabled';
   let marginModeEnabled = true;
   let desjModeEnabled = true;
+  let currencyModeEnabled = true;
   try {
     const mv = localStorage.getItem(MARGIN_ENABLED_KEY);
     if(mv !== null) marginModeEnabled = mv === '1';
     const dv = localStorage.getItem(DESJ_ENABLED_KEY);
     if(dv !== null) desjModeEnabled = dv === '1';
+    const cv = localStorage.getItem(CURRENCY_ENABLED_KEY);
+    if(cv !== null) currencyModeEnabled = cv === '1';
   } catch(e){}
 
   // ---- Named coefficient presets for Desjoyaux mode, persisted ----
@@ -1600,7 +1622,7 @@
     const multiplyIsZoom = opsDisabled && !coefAdjustActive;
     const minusIsShare = opsDisabled && !coefAdjustActive;
     const shareAvailable = minusIsShare && history.length > 0;
-    const plusIsCurrency = !anyArmed && tokens.length === 0 && (cur === "0" || justEvaluated);
+    const plusIsCurrency = currencyModeEnabled && !anyArmed && tokens.length === 0 && (cur === "0" || justEvaluated);
     opButtons.forEach(el => {
       const isMulDiv = el.dataset.v === '×' || el.dataset.v === '÷';
       const isDivide = el.dataset.v === '÷';
@@ -2545,7 +2567,7 @@
       else if(v === '÷' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(openModal, 0);
       else if(v === '×' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(toggleHistoryFullscreen, 0);
       else if(v === '−' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0")) && history.length > 0) setTimeout(shareHistory, 0);
-      else if(v === '+' && adjStep === null && !(pctArmed||marginArmed||desjArmed) && tokens.length===0 && (cur==="0" || justEvaluated)) armCurrencyEntry();
+      else if(v === '+' && adjStep === null && currencyModeEnabled && !(pctArmed||marginArmed||desjArmed) && tokens.length===0 && (cur==="0" || justEvaluated)) armCurrencyEntry();
       else setOp(v);
     }
     else if(a === 'equals') equals();
@@ -2749,6 +2771,7 @@
     reseauInput.value = defaultReseau;
     chkMarginEnabled.checked = marginModeEnabled;
     chkDesjEnabled.checked = desjModeEnabled;
+    chkCurrencyEnabled.checked = currencyModeEnabled;
     updateDecimalsUI();
     updateCurrencyUI();
     renderPresetChips();
@@ -2779,6 +2802,11 @@
   chkDesjEnabled.addEventListener('change', () => {
     desjModeEnabled = chkDesjEnabled.checked;
     try { localStorage.setItem(DESJ_ENABLED_KEY, desjModeEnabled ? '1' : '0'); } catch(e){}
+    render();
+  });
+  chkCurrencyEnabled.addEventListener('change', () => {
+    currencyModeEnabled = chkCurrencyEnabled.checked;
+    try { localStorage.setItem(CURRENCY_ENABLED_KEY, currencyModeEnabled ? '1' : '0'); } catch(e){}
     render();
   });
 
@@ -2975,6 +3003,8 @@
       manualMargeDesc: 'Marge/Remise/Compenser en haut. Touchez 2 champs (3 en mode Compenser).',
       manualDesjTitle: 'Desjoyaux',
       manualDesjDesc: 'Revient × coefs → prix TTC. ▲▼ ajustent le coef sélectionné.',
+      manualCurrencyTitle: 'Conversion € / $',
+      manualCurrencyDesc: 'Taux manuel ou live (bouton sur la ligne Taux). Désactivable dans les réglages.',
       manualHistTitle: 'Historique',
       manualHistDesc: "Tap = réutiliser · appui long = ajouter une note · double-clic C = effacer.",
       annotationTitle: 'Ajouter une note',
@@ -3080,6 +3110,8 @@
       manualMargeDesc: 'Margin/Discount/Offset toggle at top. Tap 2 fields (3 in Offset mode).',
       manualDesjTitle: 'Desjoyaux',
       manualDesjDesc: 'Cost × coefs → final price. ▲▼ adjust the selected coef.',
+      manualCurrencyTitle: 'EUR / USD conversion',
+      manualCurrencyDesc: 'Manual or live rate (button on the Rate row). Can be disabled in Settings.',
       manualHistTitle: 'History',
       manualHistDesc: 'Tap = reuse · long-press = add a note · double-tap C = clear.',
       annotationTitle: 'Add a note',
@@ -3194,6 +3226,8 @@
     txtManualMargeTitle.textContent = t('manualMargeTitle');
     txtManualMargeDesc.textContent = t('manualMargeDesc');
     txtManualDesjDesc.textContent = t('manualDesjDesc');
+    txtManualCurrencyTitle.textContent = t('manualCurrencyTitle');
+    txtManualCurrencyDesc.textContent = t('manualCurrencyDesc');
     txtManualHistTitle.textContent = t('manualHistTitle');
     txtManualHistDesc.innerHTML = t('manualHistDesc');
     txtAnnotationTitle.textContent = t('annotationTitle');
