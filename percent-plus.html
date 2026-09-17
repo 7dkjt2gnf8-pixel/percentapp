@@ -365,6 +365,7 @@
     overflow:hidden;
     transition:height .25s ease;
   }
+  .keypad.compactKb{ height:30.4vh; }
   .keypadHalf{ display:contents; }
   .key{
     border:none; border-radius:var(--radius);
@@ -611,6 +612,13 @@
             <button type="button" data-cur="€">€</button>
             <button type="button" data-cur="$">$</button>
           </div>
+        </div>
+        <div class="settingsRow">
+          <span class="rowLabel" id="lblKeyboardSize">Taille du clavier réduite</span>
+          <label class="iosSwitch">
+            <input type="checkbox" id="chkCompactKeyboard">
+            <span class="iosSlider"></span>
+          </label>
         </div>
       </div>
 
@@ -960,6 +968,7 @@
   const chkMarginEnabled = document.getElementById('chkMarginEnabled');
   const chkDesjEnabled = document.getElementById('chkDesjEnabled');
   const chkCurrencyEnabled = document.getElementById('chkCurrencyEnabled');
+  const chkCompactKeyboard = document.getElementById('chkCompactKeyboard');
   const lblMarginToggle = document.getElementById('lblMarginToggle');
   const logoDesjToggle = document.getElementById('logoDesjToggle');
   const txtSettingsTitle = document.getElementById('txtSettingsTitle');
@@ -1419,6 +1428,14 @@
     if(dv !== null) desjModeEnabled = dv === '1';
     const cv = localStorage.getItem(CURRENCY_ENABLED_KEY);
     if(cv !== null) currencyModeEnabled = cv === '1';
+  } catch(e){}
+
+  // ---- Compact keyboard (20% shorter), persisted ----
+  const COMPACT_KB_KEY = 'percentplus_compactKeyboard';
+  let compactKeyboard = false;
+  try {
+    const ck = localStorage.getItem(COMPACT_KB_KEY);
+    if(ck !== null) compactKeyboard = ck === '1';
   } catch(e){}
 
   // ---- Named coefficient presets for Desjoyaux mode, persisted ----
@@ -2914,6 +2931,7 @@
     chkMarginEnabled.checked = marginModeEnabled;
     chkDesjEnabled.checked = desjModeEnabled;
     chkCurrencyEnabled.checked = currencyModeEnabled;
+    chkCompactKeyboard.checked = compactKeyboard;
     updateDecimalsUI();
     updateCurrencyUI();
     renderPresetChips();
@@ -2950,6 +2968,15 @@
     currencyModeEnabled = chkCurrencyEnabled.checked;
     try { localStorage.setItem(CURRENCY_ENABLED_KEY, currencyModeEnabled ? '1' : '0'); } catch(e){}
     render();
+  });
+  chkCompactKeyboard.addEventListener('change', () => {
+    compactKeyboard = chkCompactKeyboard.checked;
+    keypadEl.classList.toggle('compactKb', compactKeyboard);
+    try { localStorage.setItem(COMPACT_KB_KEY, compactKeyboard ? '1' : '0'); } catch(e){}
+    measureKeypadFullHeight();
+    if(!keypadCollapsed){
+      keypadEl.style.height = keypadFullHeight + 'px';
+    }
   });
 
   const zoomKeySVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15.5" y2="15.5"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>';
@@ -3483,6 +3510,7 @@
     keypadEl.style.height = prevHeight;
     keypadEl.style.transition = prevTransition;
   }
+  keypadEl.classList.toggle('compactKb', compactKeyboard);
   measureKeypadFullHeight();
   window.addEventListener('resize', measureKeypadFullHeight);
   keypadHandle.addEventListener('pointerdown', (e) => {
