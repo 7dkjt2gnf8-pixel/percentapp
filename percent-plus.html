@@ -1342,6 +1342,7 @@
     desjBuffers.siege = fmtFull(d.siege);
     desjBuffers.reseau = fmtFull(d.reseau);
     cur = desjBuffers.revient;
+    desjTouch('revient'); // keep revient counted as "known" once the user navigates to another field — normal typing does this via inputDigit(), but setting the buffer directly here bypasses that
     desjDirty = true;
     render();
   }
