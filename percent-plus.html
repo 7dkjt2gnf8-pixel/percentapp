@@ -1719,7 +1719,7 @@
     const multiplyIsZoom = opsDisabled && !coefAdjustActive;
     const minusIsShare = opsDisabled && !coefAdjustActive;
     const shareAvailable = minusIsShare && history.length > 0;
-    const plusIsCurrency = currencyModeEnabled && !anyArmed && tokens.length === 0 && (cur === "0" || justEvaluated);
+    const plusIsCurrency = currencyModeEnabled && opsDisabled && !coefAdjustActive;
     opButtons.forEach(el => {
       const isMulDiv = el.dataset.v === '×' || el.dataset.v === '÷';
       const isDivide = el.dataset.v === '÷';
@@ -2723,7 +2723,7 @@
       else if(v === '÷' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(openModal, 0);
       else if(v === '×' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) setTimeout(toggleHistoryFullscreen, 0);
       else if(v === '−' && adjStep === null && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0")) && history.length > 0) setTimeout(shareHistory, 0);
-      else if(v === '+' && adjStep === null && currencyModeEnabled && !(pctArmed||marginArmed||desjArmed) && tokens.length===0 && (cur==="0" || justEvaluated)) armCurrencyEntry();
+      else if(v === '+' && adjStep === null && currencyModeEnabled && ((pctArmed||marginArmed||desjArmed) || (tokens.length===0 && cur==="0"))) armCurrencyEntry();
       else setOp(v);
     }
     else if(a === 'equals') equals();
