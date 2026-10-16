@@ -458,6 +458,10 @@
   .key:active{ transform:scale(0.93); filter:brightness(1.15); }
   #keyDivide, #keyMultiply, #keyBack,
   #keyDivide *, #keyMultiply *, #keyBack *{ touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; }
+  /* No native loupe / selection / callout on any key (iOS): keys never scroll, so touch-action:none is safe. */
+  .keypad, .keypad *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .keypad .key, .keypad .halfBtn, .keypad .key *{ touch-action:none; }
+  .keypad ::selection{ background:transparent; }
   .key.op{ background:linear-gradient(180deg,#3d3d3d,#303030); font-size:22px; }
   .key.arith{ background:linear-gradient(180deg,#3a6ea8,#2b5480); font-size:24px; font-weight:500; }
   .key.equalsBtn{ background:linear-gradient(180deg,#e0872e,#b76a20); font-size:24px; font-weight:600; color:#fff; }
@@ -573,6 +577,19 @@
   .phone.theme-black .key.red{ color:#e5483c; font-weight:500; }
   .phone.theme-black .key.amber{ color:#b4b7bc; font-weight:500; }
   .phone.theme-black .key.op{ font-weight:300; }
+  /* "Black/White": the Black theme (it also carries .theme-black) with only the number keys in white. */
+  .phone.theme-bw .key[data-a="digit"]{
+    background:linear-gradient(145deg,#c4c7cd,#9a9ea6); color:#0c0d0f; font-weight:400;
+    box-shadow:
+      5px 5px 11px rgba(0,0,0,0.55),
+      -4px -4px 9px rgba(255,255,255,0.07),
+      inset 1px 1px 0 rgba(255,255,255,0.7),
+      inset -2px -2px 4px rgba(0,0,0,0.14);
+  }
+  .phone.theme-bw .key[data-a="digit"]:active{
+    background:linear-gradient(145deg,#9a9ea6,#b0b4bb);
+    box-shadow:inset 3px 3px 7px rgba(0,0,0,0.3), inset -2px -2px 6px rgba(255,255,255,0.7);
+  }
   .phone.theme-black{ background:#23262a; }
   .phone.theme-black .pctRow.active .val.editableVal{ background:rgba(240,130,30,0.12); }
 
@@ -652,12 +669,12 @@
   .settingsRow .stackedLabel{ font-size:14.5px; color:var(--settings-text); font-weight:400; margin-bottom:7px; display:block; }
   .themeToggle{ display:flex; gap:6px; margin-top:10px; }
   #themeToggleMain{ flex-wrap:wrap; }
-  #themeToggleMain button{ flex:1 1 calc(25% - 6px); }
+  #themeToggleMain button{ flex:1 1 calc(33.333% - 6px); }
   .themeToggle button{
     flex:1; padding:7px 4px; border:none; border-radius:9px; font-size:12px; font-weight:600;
     background:var(--settings-control-bg); color:var(--settings-text);
   }
-  .themeToggle #btnThemePastel, .themeToggle #btnThemeVivid{ flex:1 1 calc(50% - 6px); }
+  .themeToggle #btnThemeBlack, .themeToggle #btnThemeBW, .themeToggle #btnThemePastel, .themeToggle #btnThemeVivid{ flex:1 1 calc(50% - 6px); }
   .themeToggle button.active{ background:var(--settings-control-bg); border:2px solid var(--green); color:var(--settings-text); }
   .langMiniBtn{
     padding:4px 10px; border:none; border-radius:8px; font-size:12px; font-weight:700;
@@ -837,6 +854,7 @@
             <button type="button" id="btnThemeDark">Sombre</button>
             <button type="button" id="btnThemeAuto">Système</button>
             <button type="button" id="btnThemeBlack">Black</button>
+            <button type="button" id="btnThemeBW">Black/White</button>
             <button type="button" id="btnThemePastel">Pastel light</button>
             <button type="button" id="btnThemeVivid">Pastel dark</button>
           </div>
@@ -1133,6 +1151,7 @@
   const btnThemePastel = document.getElementById('btnThemePastel');
   const btnThemeVivid = document.getElementById('btnThemeVivid');
   const btnThemeBlack = document.getElementById('btnThemeBlack');
+  const btnThemeBW = document.getElementById('btnThemeBW');
   const clearHistOverlay = document.getElementById('clearHistOverlay');
   const shareChoiceOverlay = document.getElementById('shareChoiceOverlay');
   const txtShareChoiceTitle = document.getElementById('txtShareChoiceTitle');
@@ -2942,6 +2961,22 @@
 
   let lastClearClickTime = 0;
 
+  // ---- Definitive lockdown of the native iOS loupe / text selection ----
+  // preventDefault() on pointerdown alone does not stop Safari's touch-based selection
+  // gesture, so also cancel touchstart on the keypad (keys act on pointerdown, never on
+  // click) and block every selection / callout / pinch path outside real <input>s.
+  const isEditableTarget = (el) => !!(el && el.closest && el.closest('input, textarea, [contenteditable="true"]'));
+  ['selectstart','contextmenu','dragstart'].forEach(evt =>
+    document.addEventListener(evt, (e) => { if(!isEditableTarget(e.target)) e.preventDefault(); }, true));
+  document.addEventListener('selectionchange', () => {
+    const s = window.getSelection();
+    if(s && !s.isCollapsed && !isEditableTarget(document.activeElement)) s.removeAllRanges();
+  });
+  ['gesturestart','gesturechange','gestureend'].forEach(evt =>
+    document.addEventListener(evt, (e) => e.preventDefault(), { passive:false }));
+  document.querySelector('.keypad').addEventListener('touchstart', (e) => { if(e.cancelable) e.preventDefault(); }, { passive:false });
+
+
   document.querySelector('.keypad').addEventListener('pointerdown', (e)=>{
     const btn = e.target.closest('[data-a]');
     if(!btn) return;
@@ -3390,6 +3425,7 @@
       themePastel: 'Pastel light',
       themeVivid: 'Pastel dark',
       themeBlack: 'Black',
+      themeBW: 'Black/White',
       langLabel: 'Langue',
       decimalsLabel: 'Décimales affichées',
       currencyLabel: 'Devise',
@@ -3418,7 +3454,7 @@
       manualHistDesc: "Tap = réutiliser · appui long = ajouter une note · double-clic C = effacer.",
       annotationTitle: 'Ajouter une note',
       manualThemeTitle: 'Thème',
-      manualThemeDesc: 'Clair / Sombre / Système / Black / Pastel light / Pastel dark.',
+      manualThemeDesc: 'Clair / Sombre / Système / Black / Black/White / Pastel light / Pastel dark.',
       manualSettingsTitle: 'Réglages',
       manualSettingsDesc: 'TVA, coefs par défaut, décimales affichées, devise €/$, activer/désactiver Marge et Desjoyaux.',
       close: 'Fermer',
@@ -3500,6 +3536,7 @@
       themePastel: 'Pastel light',
       themeVivid: 'Pastel dark',
       themeBlack: 'Black',
+      themeBW: 'Black/White',
       langLabel: 'Language',
       decimalsLabel: 'Displayed decimals',
       currencyLabel: 'Currency',
@@ -3528,7 +3565,7 @@
       manualHistDesc: 'Tap = reuse · long-press = add a note · double-tap C = clear.',
       annotationTitle: 'Add a note',
       manualThemeTitle: 'Theme',
-      manualThemeDesc: 'Light / Dark / System / Black / Pastel light / Pastel dark.',
+      manualThemeDesc: 'Light / Dark / System / Black / Black/White / Pastel light / Pastel dark.',
       manualSettingsTitle: 'Settings',
       manualSettingsDesc: 'VAT rate, default coefficients, displayed decimals, €/$ currency, enable/disable Margin and Desjoyaux.',
       close: 'Close',
@@ -3627,6 +3664,7 @@
     btnThemePastel.textContent = t('themePastel');
     btnThemeVivid.textContent = t('themeVivid');
     btnThemeBlack.textContent = t('themeBlack');
+    btnThemeBW.textContent = t('themeBW');
     btnManual.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
     btnCancel.textContent = t('cancel');
     btnSave.textContent = t('save');
@@ -3693,20 +3731,22 @@
   let currentThemeSetting = 'light';
 
   function effectiveIsDark(){
-    return currentThemeSetting === 'dark' || currentThemeSetting === 'black' || (currentThemeSetting === 'auto' && darkMediaQuery.matches);
+    return currentThemeSetting === 'dark' || currentThemeSetting === 'black' || currentThemeSetting === 'bw' || (currentThemeSetting === 'auto' && darkMediaQuery.matches);
   }
   function applyTheme(theme){
     currentThemeSetting = theme;
     phoneRoot.classList.toggle('dark', effectiveIsDark());
     phoneRoot.classList.toggle('theme-pastel', theme === 'pastel' || theme === 'vivid');
     phoneRoot.classList.toggle('theme-vivid', theme === 'vivid');
-    phoneRoot.classList.toggle('theme-black', theme === 'black');
+    phoneRoot.classList.toggle('theme-black', theme === 'black' || theme === 'bw');
+    phoneRoot.classList.toggle('theme-bw', theme === 'bw');
     btnThemeLight.classList.toggle('active', theme === 'light');
     btnThemeDark.classList.toggle('active', theme === 'dark');
     btnThemeAuto.classList.toggle('active', theme === 'auto');
     btnThemePastel.classList.toggle('active', theme === 'pastel');
     btnThemeVivid.classList.toggle('active', theme === 'vivid');
     btnThemeBlack.classList.toggle('active', theme === 'black');
+    btnThemeBW.classList.toggle('active', theme === 'bw');
     if(typeof syncDesjLogos === 'function') syncDesjLogos();
     try { localStorage.setItem(THEME_KEY, theme); } catch(e){}
   }
@@ -3716,6 +3756,7 @@
   btnThemePastel.addEventListener('click', ()=>applyTheme('pastel'));
   btnThemeVivid.addEventListener('click', ()=>applyTheme('vivid'));
   btnThemeBlack.addEventListener('click', ()=>applyTheme('black'));
+  btnThemeBW.addEventListener('click', ()=>applyTheme('bw'));
   darkMediaQuery.addEventListener('change', ()=>{
     if(currentThemeSetting === 'auto') phoneRoot.classList.toggle('dark', effectiveIsDark());
   });
