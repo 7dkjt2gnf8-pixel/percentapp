@@ -744,6 +744,16 @@
       padding:9px;
       align-self:center;
     }
+    /* Landscape: the keypad is a fixed side column. The vertical collapse handle and the
+       "compact keyboard" height (30.4vh) make no sense here and used to clip or hide the
+       keys, so neutralize them (!important also beats the inline height/padding the
+       collapse gesture sets). Rows shrink if the screen is short (iPhone SE/mini). */
+    .keypadHandle{ display:none !important; }
+    .keypad, .keypad.compactKb{
+      height:auto !important;
+      padding:9px !important;
+      grid-auto-rows:min(62px, calc((100dvh - 46px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 5));
+    }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -3872,6 +3882,24 @@
       setTimeout(scrollHistoryToBottom, 260);
     }
   });
+
+  // Rotating to landscape while the keypad is collapsed (portrait-only gesture) must
+  // bring everything back: un-collapse, clear the inline height/padding, re-render.
+  const landscapeMQ = window.matchMedia('(orientation: landscape)');
+  function onOrientationChange(){
+    keypadEl.style.height = '';
+    keypadEl.style.padding = '';
+    keypadEl.style.transition = '';
+    if(landscapeMQ.matches && keypadCollapsed){
+      keypadCollapsed = false;
+      render();
+      setTimeout(scrollHistoryToBottom, 50);
+    }
+    measureKeypadFullHeight();
+  }
+  if(landscapeMQ.addEventListener) landscapeMQ.addEventListener('change', onOrientationChange);
+  else if(landscapeMQ.addListener) landscapeMQ.addListener(onOrientationChange);
+  if(landscapeMQ.matches) onOrientationChange();
 
   render();
 })();
