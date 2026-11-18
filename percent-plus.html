@@ -2010,7 +2010,8 @@
     tvaPlusButtons.forEach(el => el.classList.toggle('disabledKey', tvaPlusDisabled));
     const percentDisabled = anyArmed || (tokens.length === 0 && cur === "0");
     percentButtons.forEach(el => el.classList.toggle('disabledKey', percentDisabled));
-    const toDisabled = anyArmed || (tokens.length === 0 && cur === "0");
+    // Δ% only makes sense on a single number: grey it out as soon as an operator/parenthesis is typed (e.g. 25+5%).
+    const toDisabled = anyArmed || tokens.length > 0 || cur === "0";
     toButtons.forEach(el => el.classList.toggle('disabledKey', toDisabled));
     const backDisabled = (cur === "0" && tokens.length === 0);
     keyBack.classList.toggle('disabledKey', backDisabled);
